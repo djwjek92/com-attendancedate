@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>씨오엠(COM) 출퇴근 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0e17; --surface:#111827; --surface2:#1a2235; --border:#1e2d45;
+  --accent:#3b82f6; --accent2:#06b6d4; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+  --text:#f1f5f9; --text2:#94a3b8; --text3:#475569;
+  --font:'Noto Sans KR',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;padding-bottom:48px;}
+.screen.active{display:block;}
+#screen-login{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 20% 20%,#0d1f3c 0%,var(--bg) 60%);}
+#screen-login.active{display:flex;}
+.login-logo{font-size:12px;font-weight:700;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;}
+.login-title{font-size:26px;font-weight:900;margin-bottom:4px;background:linear-gradient(135deg,#fff 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.login-sub{font-size:12px;color:var(--text3);margin-bottom:36px;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 25px 60px rgba(0,0,0,.5);}
+.login-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:24px;}
+.login-tab{padding:10px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;color:var(--text3);transition:all .2s;border:none;background:none;font-family:var(--font);}
+.login-tab.active{background:var(--accent);color:#fff;}
+.field-group{margin-bottom:16px;}
+.field-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:7px;}
+.field-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;}
+.field-input:focus{border-color:var(--accent);}
+.field-input[readonly]{opacity:.55;}
+.field-select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:var(--font);outline:none;appearance:none;cursor:pointer;}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:opacity .2s,transform .1s;margin-top:4px;}
+.btn-primary:active{transform:scale(.98);opacity:.9;}
+.btn-secondary{padding:9px 18px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .2s;}
+.btn-secondary:hover{background:var(--border);color:var(--text);}
+.btn-danger{padding:9px 16px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3);border-radius:10px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;}
+.btn-success{padding:12px 22px;background:linear-gradient(135deg,var(--success),#059669);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-badge{font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase;}
+.badge-worker{background:rgba(59,130,246,.2);color:var(--accent);border:1px solid rgba(59,130,246,.3);}
+.badge-admin{background:rgba(245,158,11,.2);color:var(--warning);border:1px solid rgba(245,158,11,.3);}
+.worker-hero{margin:16px;background:linear-gradient(135deg,#0d1f3c,#0a1628);border:1px solid var(--border);border-radius:20px;padding:22px;position:relative;overflow:hidden;}
+.worker-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(59,130,246,.15),transparent 70%);border-radius:50%;}
+.worker-name{font-size:20px;font-weight:900;margin-bottom:3px;}
+.worker-meta{font-size:12px;color:var(--text2);margin-bottom:18px;}
+.clock-display{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--accent2);letter-spacing:2px;margin-bottom:3px;}
+.date-display{font-size:12px;color:var(--text3);margin-bottom:18px;}
+.att-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.att-btn{padding:15px 10px;border-radius:14px;border:none;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.att-btn-icon{font-size:20px;}
+.att-btn-in{background:linear-gradient(135deg,var(--success),#059669);color:#fff;}
+.att-btn-out{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;}
+.att-btn:disabled{opacity:.4;cursor:not-allowed;}
+.section-card{margin:0 16px 14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.section-header{padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.section-title{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--text2);text-transform:uppercase;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;}
+.stat-item{padding:16px 10px;text-align:center;border-right:1px solid var(--border);}
+.stat-item:last-child{border-right:none;}
+.stat-val{font-size:22px;font-weight:900;color:var(--accent);font-family:var(--mono);}
+.stat-label{font-size:10px;color:var(--text3);margin-top:3px;}
+.record-list{padding:4px 0;}
+.record-item{display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);gap:10px;}
+.record-item:last-child{border-bottom:none;}
+.record-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-in{background:var(--success);}
+.dot-out{background:var(--danger);}
+.admin-tabs{display:flex;gap:4px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
+.admin-tab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--text3);border:1px solid transparent;background:none;font-family:var(--font);transition:all .2s;}
+.admin-tab.active{background:var(--surface2);color:var(--text);border-color:var(--border);}
+.filter-bar{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;}
+.filter-chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--surface);color:var(--text3);border:1px solid var(--border);font-family:var(--font);transition:all .2s;}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.worker-card{margin:0 14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.worker-card-header{display:flex;align-items:center;padding:13px 14px;gap:10px;cursor:pointer;}
+.worker-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+.worker-info{flex:1;min-width:0;}
+.worker-card-name{font-size:14px;font-weight:700;}
+.worker-card-meta{font-size:11px;color:var(--text3);margin-top:1px;}
+.status-pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.3px;}
+.pill-in{background:rgba(16,185,129,.2);color:var(--success);}
+.pill-out{background:rgba(100,116,139,.15);color:var(--text3);}
+.pill-off{background:rgba(239,68,68,.15);color:var(--danger);}
+.worker-detail{border-top:1px solid var(--border);padding:14px;display:none;}
+.worker-detail.open{display:block;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.detail-box{background:var(--bg);border-radius:10px;padding:11px;text-align:center;}
+.detail-box-val{font-size:20px;font-weight:900;color:var(--accent);font-family:var(--mono);}
+.detail-box-label{font-size:10px;color:var(--text3);margin-top:2px;}
+.detail-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px;}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;}
+.summary-val{font-size:26px;font-weight:900;font-family:var(--mono);}
+.summary-label{font-size:11px;color:var(--text3);margin-top:3px;}
+.summary-card.blue .summary-val{color:var(--accent);}
+.summary-card.green .summary-val{color:var(--success);}
+.summary-card.yellow .summary-val{color:var(--warning);}
+.summary-card.cyan .summary-val{color:var(--accent2);}
+.settings-section{margin:0 14px 14px;}
+.settings-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;padding-left:3px;}
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.settings-row{display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--border);gap:10px;}
+.settings-row:last-child{border-bottom:none;}
+.settings-row-label{font-size:13px;}
+.settings-row-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.settings-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none;width:160px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:0 0 36px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+.modal-title{font-size:17px;font-weight:800;padding:18px 22px 14px;border-bottom:1px solid var(--border);}
+.modal-body{padding:18px 22px;}
+.modal-actions{display:flex;gap:8px;padding:0 22px;}
+/* CONTRACT */
+.cdoc{background:#fff;color:#111;border-radius:12px;padding:18px 14px;font-family:'Noto Sans KR',sans-serif;font-size:11px;line-height:1.85;margin-bottom:14px;}
+.cdoc h2{font-size:15px;font-weight:900;text-align:center;margin-bottom:3px;}
+.cdoc .csub{font-size:10px;color:#666;text-align:center;margin-bottom:12px;border-bottom:2px solid #111;padding-bottom:7px;}
+.cdoc .cintro{font-size:11px;margin-bottom:10px;line-height:1.7;}
+.cdoc table{width:100%;border-collapse:collapse;margin:7px 0;font-size:10.5px;}
+.cdoc table td{border:1px solid #ccc;padding:5px 7px;vertical-align:top;}
+.cdoc table td.th{background:#f0f4ff;font-weight:700;color:#1e3a8a;width:75px;text-align:center;}
+.cdoc .csec{font-weight:800;font-size:11px;margin:11px 0 5px;padding:4px 8px;background:#f0f4ff;border-left:3px solid #3b82f6;border-radius:0 4px 4px 0;color:#1e3a8a;}
+.cdoc .cnotice{background:#f8f8f8;border:1px solid #ddd;border-radius:5px;padding:7px 9px;font-size:10px;color:#555;line-height:1.6;margin:6px 0;}
+.cdoc .cagree{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:10px;color:#666;margin:6px 0;}
+.cdoc .cagsig{min-width:70px;border-bottom:1px solid #999;height:16px;}
+.cdoc .cagree-block{margin:6px 0 10px;padding:6px 10px;background:#f9f9f9;border:1px solid #e5e5e5;border-radius:5px;}
+.cdoc .cagree-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;color:#555;}
+.cdoc .cagree-name{font-weight:700;color:#111;font-size:11px;min-width:60px;}
+.cdoc .cagree-sigbox{display:flex;align-items:flex-end;justify-content:center;min-width:80px;height:32px;border-bottom:1px solid #999;}
+.cdoc .cagree-sigbox img{max-height:28px;max-width:78px;object-fit:contain;}
+.cdoc .wdrow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:5px 0;}
+.cdoc .wdcell{text-align:center;}
+.cdoc .wdlabel{font-size:9px;color:#888;margin-bottom:2px;}
+.cdoc .wdbox{border:1px solid #ccc;border-radius:3px;padding:3px 1px;font-size:10px;font-weight:700;color:#555;}
+.cdoc .wdbox.ck{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+.cdoc .csignarea{display:flex;justify-content:space-between;margin-top:18px;padding-top:12px;border-top:1px solid #ddd;gap:10px;}
+.cdoc .csignbox{flex:1;text-align:center;}
+.cdoc .csignline{height:44px;border-bottom:1px solid #999;margin-bottom:5px;display:flex;align-items:flex-end;justify-content:center;}
+.cdoc .csignline img{max-height:38px;max-width:100%;object-fit:contain;}
+.cdoc .csignlabel{font-size:9px;color:#888;}
+.cdoc .csignname{font-weight:700;font-size:11px;margin-top:2px;}
+.cdoc .cfooter{text-align:center;font-size:9px;color:#aaa;margin-top:10px;}
+.cdoc .crow{display:flex;margin-bottom:3px;align-items:flex-start;}
+.cdoc .clabel{min-width:70px;font-weight:700;flex-shrink:0;color:#333;}
+.cdoc .cval{flex:1;word-break:break-all;}
+/* SALARY */
+.salary-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.salary-row:last-child{border-bottom:none;}
+.salary-row-label{color:var(--text2);}
+.salary-row-val{font-weight:700;font-family:var(--mono);}
+.salary-total{color:var(--success);font-size:17px!important;}
+.empty-state{text-align:center;padding:36px 18px;color:var(--text3);font-size:13px;}
+.empty-state-icon{font-size:36px;margin-bottom:10px;}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--surface2);color:var(--text3);border:1px solid var(--border);}
+.setup-notice{margin:14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:14px;}
+.setup-notice-title{font-size:13px;font-weight:700;color:var(--warning);margin-bottom:5px;}
+.setup-notice-text{font-size:12px;color:var(--text2);line-height:1.6;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border);border-radius:40px;padding:12px 22px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s ease;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{color:var(--success);border-color:rgba(16,185,129,.4);}
+.toast.error{color:var(--danger);border-color:rgba(239,68,68,.4);}
+.toast.info{color:var(--accent2);border-color:rgba(6,182,212,.4);}
+select option{background:var(--surface);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-logo">씨오엠(COM)</div>
+  <div class="login-title">출퇴근 관리</div>
+  <div class="login-sub">인스파이어 리조트 근태 시스템</div>
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setMode('worker')">직원</button>
+      <button class="login-tab" onclick="setMode('admin')">관리자</button>
+    </div>
+
+    <!-- 직원 -->
+    <div id="lf-worker">
+      <div class="field-group">
+        <div class="field-label">이름</div>
+        <input class="field-input" id="l-name" type="text" placeholder="본인 이름">
+      </div>
+      <div class="field-group">
+        <div class="field-label">전화번호 뒷 4자리</div>
+        <input class="field-input" id="l-phone4" type="password" placeholder="••••" maxlength="4" inputmode="numeric" style="letter-spacing:8px;font-size:20px;font-family:var(--mono);text-align:center;">
+      </div>
+      <button class="btn-primary" onclick="workerLogin()">로그인</button>
+      <div style="margin-top:12px;font-size:11px;color:var(--text3);text-align:center;">관리자에게 사전 등록된 직원만 로그인 가능합니다</div>
+    </div>
+
+    <!-- 관리자 (대표도 이 탭으로 로그인) -->
+    <div id="lf-admin" style="display:none;">
+      <div class="field-group">
+        <div class="field-label">이름</div>
+        <input class="field-input" id="l-admin-name" type="text" placeholder="이름 입력" autocomplete="off" autocorrect="off" autocapitalize="off">
+      </div>
+      <div class="field-group">
+        <div class="field-label">전화번호 뒷 4자리</div>
+        <input class="field-input" id="l-adminpw" type="password" placeholder="••••" maxlength="6" inputmode="numeric" style="letter-spacing:8px;font-size:20px;font-family:var(--mono);text-align:center;">
+      </div>
+      <button class="btn-primary" onclick="adminLogin()">로그인</button>
+      <div style="margin-top:12px;font-size:11px;color:var(--text3);text-align:center;">관리자에게 등록된 분만 로그인 가능합니다</div>
+    </div>
+
+    <!-- 숨겨진 대표 전용 입력 (JS에서만 사용) -->
+    <input type="hidden" id="l-ceopw">
+  </div>
+</div>
+
+<!-- WORKER -->
+<div id="screen-worker" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="w-tname">-</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px;" id="w-tmeta"></div>
+    </div>
+    <div style="display:flex;gap:7px;align-items:center;">
+      <span class="topbar-badge badge-worker">직원</span>
+      <button class="btn-secondary" style="padding:7px 13px;font-size:12px;" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="worker-hero">
+    <div class="worker-name" id="w-name">-</div>
+    <div class="worker-meta" id="w-meta">-</div>
+    <div class="clock-display" id="w-clock">00:00:00</div>
+    <div class="date-display" id="w-date"></div>
+    <div class="att-btns">
+      <button class="att-btn att-btn-in" id="btn-in" onclick="checkIn()"><span class="att-btn-icon">🟢</span>출근</button>
+      <button class="att-btn att-btn-out" id="btn-out" onclick="checkOut()"><span class="att-btn-icon">🔴</span>퇴근</button>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-header"><span class="section-title">이번 주 현황</span></div>
+    <div class="stat-row">
+      <div class="stat-item"><div class="stat-val" id="w-days">0</div><div class="stat-label">출근일수</div></div>
+      <div class="stat-item"><div class="stat-val" id="w-hours">0</div><div class="stat-label">근무시간</div></div>
+      <div class="stat-item"><div class="stat-val" id="w-saldisp">-</div><div class="stat-label">급여현황</div></div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-header"><span class="section-title">급여 상세</span></div>
+    <div style="padding:14px 18px;" id="w-saldetail"></div>
+  </div>
+  <div class="section-card">
+    <div class="section-header"><span class="section-title">출퇴근 기록</span><span style="font-size:11px;color:var(--text3);">최근 2주</span></div>
+    <div class="record-list" id="w-records"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="screen-admin" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">관리자 대시보드</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px;" id="a-date"></div>
+    </div>
+    <div style="display:flex;gap:7px;">
+      <span class="topbar-badge badge-admin">관리자</span>
+      <button class="btn-secondary" style="padding:7px 13px;font-size:12px;" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="atab('overview')">📊 현황</button>
+    <button class="admin-tab" onclick="atab('workers')">👥 직원관리</button>
+    <button class="admin-tab" onclick="atab('attendance')">📋 출퇴근</button>
+    <button class="admin-tab" onclick="atab('myatt')">🕐 내 출퇴근</button>
+  </div>
+
+  <div id="admin-tab-overview">
+    <div class="summary-grid">
+      <div class="summary-card blue"><div class="summary-val" id="s-today">0</div><div class="summary-label">오늘 출근</div></div>
+      <div class="summary-card green"><div class="summary-val" id="s-workers">0</div><div class="summary-label">등록 직원</div></div>
+      <div class="summary-card yellow"><div class="summary-val" id="s-sites">0</div><div class="summary-label">현장 수</div></div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">직무별 오늘 현황</span></div>
+      <div id="job-overview"></div>
+    </div>
+    <div id="sheets-banner" class="setup-notice">
+      <div class="setup-notice-title">⚠️ Google Sheets 미연동</div>
+      <div class="setup-notice-text">설정 탭에서 API Key와 스프레드시트 ID를 입력하세요.</div>
+    </div>
+    <div style="padding:0 14px 8px;"><button class="btn-primary" onclick="exportCSV()" style="margin-top:0;">📥 CSV 내보내기</button></div>
+  </div>
+
+  <div id="admin-tab-workers" style="display:none;">
+    <div class="filter-bar" id="wfbar"><button class="filter-chip active" onclick="fworker('all',this)">전체</button></div>
+    <div style="padding:0 14px 8px;"><button class="btn-primary" style="flex:1;" onclick="openAddW()">+ 직원 등록</button></div>
+    <div id="worker-list"></div>
+  </div>
+
+  <div id="admin-tab-attendance" style="display:none;">
+    <div class="filter-bar" style="justify-content:space-between;align-items:center;">
+      <div style="display:flex;gap:6px;">
+        <button class="filter-chip active" onclick="fatt('all',this)">전체</button>
+        <button class="filter-chip" onclick="fatt('today',this)">오늘</button>
+        <button class="filter-chip" onclick="fatt('week',this)">이번주</button>
+      </div>
+      <button class="btn-secondary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" onclick="openAddAtt()">+ 기록 추가</button>
+    </div>
+    <div id="att-list"></div>
+  </div>
+
+  <!-- TAB: 내 출퇴근 -->
+  <div id="admin-tab-myatt" style="display:none;">
+    <div id="admin-myatt-content">
+      <div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">
+        <div style="font-size:36px;margin-bottom:12px;">⏳</div>
+        로딩 중...
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-tab-settings" style="display:none;">
+    <div style="padding:14px 14px 4px;">
+      <div class="settings-section">
+        <div class="settings-title">Google Sheets 연동</div>
+        <div class="settings-card">
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">API Key</div><div class="settings-row-sub">Google Cloud Console에서 발급</div></div><input class="settings-input" type="text" id="gs-key" placeholder="AIzaSy..." oninput="saveSets()"></div>
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">Spreadsheet ID</div><div class="settings-row-sub">URL의 /d/ 이후 부분</div></div><input class="settings-input" type="text" id="gs-id" placeholder="1BxiM..." oninput="saveSets()"></div>
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">연동 테스트</div><div class="settings-row-sub" id="gs-result">미테스트</div></div><button class="btn-secondary" onclick="testSheets()">테스트</button></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">직무별 급여 단가</div>
+        <div class="settings-card" id="wage-list"></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">현장 관리</div>
+        <div class="settings-card" id="site-list"></div>
+        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="addSite()">+ 현장 추가</button>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">사업주 서명 등록</div>
+        <div class="settings-card">
+          <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+            <div class="settings-row-label">사업주(박진용) 서명</div>
+            <div class="settings-row-sub">계약서 사업주란에 자동으로 들어갑니다</div>
+            <canvas id="owner-sig-cv" style="width:100%;height:90px;background:#fff;border-radius:8px;touch-action:none;display:block;margin-top:6px;"></canvas>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button class="btn-secondary" style="flex:1;" onclick="clrOwnerSig()">✕ 지우기</button>
+              <button class="btn-success" style="flex:2;" onclick="saveOwnerSig()">💾 서명 저장</button>
+            </div>
+            <div id="owner-sig-status" style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">관리자 비밀번호</div>
+        <div class="settings-card">
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">새 비밀번호</div></div><input class="settings-input" type="password" id="new-apw" placeholder="4~6자리" maxlength="6" inputmode="numeric"></div>
+          <div class="settings-row"><div style="flex:1;"></div><button class="btn-secondary" onclick="chgApw()">변경</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ CEO SCREEN ══ -->
+<div id="screen-ceo" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="ceo-title">👑 대표 대시보드</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px;" id="ceo-date"></div>
+    </div>
+    <div style="display:flex;gap:7px;">
+      <span class="topbar-badge" style="background:rgba(245,158,11,.2);color:var(--warning);border:1px solid rgba(245,158,11,.3);">👑 대표</span>
+      <button class="btn-secondary" style="padding:7px 13px;font-size:12px;" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="admin-tabs" style="overflow-x:auto;">
+    <button class="admin-tab active" onclick="ceoTab('overview')">📊 전체현황</button>
+    <button class="admin-tab" onclick="ceoTab('salary')">💰 급여정산</button>
+    <button class="admin-tab" onclick="ceoTab('stats')">📈 통계</button>
+    <button class="admin-tab" onclick="ceoTab('accounts')">🔑 계정관리</button>
+    <button class="admin-tab" onclick="ceoTab('settings')">⚙️ 설정</button>
+  </div>
+
+  <!-- 전체현황 -->
+  <div id="ceo-tab-overview">
+    <div class="summary-grid">
+      <div class="summary-card blue"><div class="summary-val" id="ceo-today">0</div><div class="summary-label">오늘 출근</div></div>
+      <div class="summary-card green"><div class="summary-val" id="ceo-workers">0</div><div class="summary-label">등록 직원</div></div>
+      <div class="summary-card yellow"><div class="summary-val" id="ceo-week-days">0</div><div class="summary-label">이번주 총 출근</div></div>
+      <div class="summary-card cyan"><div class="summary-val" id="ceo-month-sal">0</div><div class="summary-label">이번달 급여(만원)</div></div>
+    </div>
+    <!-- 현장별 현황 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">현장별 오늘 현황</span></div>
+      <div id="ceo-site-overview"></div>
+    </div>
+    <!-- 직무별 현황 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">직무별 오늘 현황</span></div>
+      <div id="ceo-job-overview"></div>
+    </div>
+  </div>
+
+  <!-- 급여정산 -->
+  <div id="ceo-tab-salary" style="display:none;">
+    <div style="padding:12px 14px 4px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <select class="field-select" id="sal-month" style="flex:1;" onchange="renderSalarySheet()"></select>
+        <button class="btn-secondary" onclick="exportSalaryCSV()">📥 CSV</button>
+      </div>
+    </div>
+    <div id="salary-sheet"></div>
+  </div>
+
+  <!-- 통계 -->
+  <div id="ceo-tab-stats" style="display:none;">
+    <div style="padding:12px 14px 4px;">
+      <select class="field-select" id="stat-month" style="margin-bottom:12px;" onchange="renderStats()"></select>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-card blue"><div class="summary-val" id="stat-total-days">0</div><div class="summary-label">총 출근일수</div></div>
+      <div class="summary-card green"><div class="summary-val" id="stat-total-workers">0</div><div class="summary-label">근무 인원</div></div>
+      <div class="summary-card yellow"><div class="summary-val" id="stat-total-hours">0</div><div class="summary-label">총 근무시간</div></div>
+      <div class="summary-card cyan"><div class="summary-val" id="stat-total-sal">0</div><div class="summary-label">총 급여(만원)</div></div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">현장별 출근 통계</span></div>
+      <div id="stat-site-list"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">직무별 출근 통계</span></div>
+      <div id="stat-job-list"></div>
+    </div>
+  </div>
+
+  <!-- 계정관리 -->
+  <div id="ceo-tab-accounts" style="display:none;">
+    <div style="padding:12px 14px 4px;">
+      <div class="settings-section">
+        <div class="settings-title">관리자 등록</div>
+        <div class="settings-card">
+          <div style="padding:12px 14px;">
+            <div class="field-group"><div class="field-label">이름</div><input class="field-input" id="na-name" type="text" placeholder="관리자 이름"></div>
+            <div class="field-group"><div class="field-label">전화번호 뒷 4자리 (비밀번호)</div><input class="field-input" id="na-pw" type="text" placeholder="1234" maxlength="4" inputmode="numeric" style="letter-spacing:8px;font-size:20px;font-family:var(--mono);"></div>
+            <div class="field-group"><div class="field-label">담당 현장</div><select class="field-select" id="na-site"></select></div>
+            <button class="btn-primary" onclick="addAdmin()" style="margin-top:4px;">관리자 등록하기</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">등록된 관리자 목록</div>
+        <div class="settings-card" id="admin-list-card">
+          <div class="empty-state" style="padding:20px;">등록된 관리자 없음</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">관리자 공통 비밀번호</div>
+        <div class="settings-card">
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">새 공통 비밀번호</div><div class="settings-row-sub">관리자 로그인 화면에 입력하는 비밀번호</div></div><input class="settings-input" type="password" id="ceo-new-apw" placeholder="4~6자리" maxlength="6" inputmode="numeric"></div>
+          <div class="settings-row"><div style="flex:1;"></div><button class="btn-secondary" onclick="ceoChgAdminPw()">변경</button></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">대표 비밀번호 변경</div>
+        <div class="settings-card">
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">새 대표 비밀번호</div></div><input class="settings-input" type="password" id="ceo-new-cpw" placeholder="4~10자리" maxlength="10"></div>
+          <div class="settings-row"><div style="flex:1;"></div><button class="btn-secondary" onclick="ceoChgCeoPw()">변경</button></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">전체 데이터 관리</div>
+        <div class="settings-card">
+          <div class="settings-row"><div style="flex:1;"><div class="settings-row-label">전체 출퇴근 기록 CSV</div></div><button class="btn-secondary" onclick="exportCSV()">📥 내보내기</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 설정 (관리자 설정과 동일) -->
+  <div id="ceo-tab-settings" style="display:none;">
+    <div style="padding:14px 14px 4px;">
+      <div class="settings-section">
+        <div class="settings-title">Google Sheets 연동</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div style="flex:1;"><div class="settings-row-label">연동 상태</div><div class="settings-row-sub">자동 연동됨 (고정값)</div></div>
+            <span style="font-size:12px;color:var(--success);font-weight:700;">✅ 연동됨</span>
+          </div>
+          <div class="settings-row">
+            <div style="flex:1;"><div class="settings-row-label">Spreadsheet ID</div></div>
+            <span style="font-size:10px;color:var(--text3);font-family:var(--mono);">139Om3...Bi</span>
+          </div>
+          <div class="settings-row">
+            <div style="flex:1;"><div class="settings-row-label">연동 테스트</div><div class="settings-row-sub" id="ceo-gs-result">클릭하여 확인</div></div>
+            <button class="btn-secondary" onclick="testSheetsFixed()">테스트</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">직무별 급여 단가</div>
+        <div class="settings-card" id="ceo-wage-list"></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">현장 관리</div>
+        <div class="settings-card" id="ceo-site-list"></div>
+        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="addSite()">+ 현장 추가</button>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">사업주 서명 등록</div>
+        <div class="settings-card">
+          <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+            <div class="settings-row-label">사업주(박진용) 서명</div>
+            <canvas id="ceo-owner-sig-cv" style="width:100%;height:90px;background:#fff;border-radius:8px;touch-action:none;display:block;margin-top:6px;"></canvas>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button class="btn-secondary" style="flex:1;" onclick="clrOwnerSig2()">✕ 지우기</button>
+              <button class="btn-success" style="flex:2;" onclick="saveOwnerSig2()">💾 서명 저장</button>
+            </div>
+            <div id="ceo-owner-sig-status" style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN DUAL SCREEN (관리자 겸직) ══ -->
+<div id="screen-admin-dual" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="dual-tname">관리자</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px;" id="dual-tmeta"></div>
+    </div>
+    <div style="display:flex;gap:7px;align-items:center;">
+      <span class="topbar-badge" style="background:rgba(245,158,11,.2);color:var(--warning);border:1px solid rgba(245,158,11,.3);">⚙️ 관리자</span>
+      <button class="btn-secondary" style="padding:7px 13px;font-size:12px;" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="dualTab('work')">🕐 내 출퇴근</button>
+    <button class="admin-tab" onclick="dualTab('manage')">⚙️ 관리</button>
+  </div>
+  <!-- 내 출퇴근 탭 -->
+  <div id="dual-tab-work">
+    <div class="worker-hero">
+      <div class="worker-name" id="dual-name">-</div>
+      <div class="worker-meta" id="dual-meta">-</div>
+      <div class="clock-display" id="dual-clock">00:00:00</div>
+      <div class="date-display" id="dual-date"></div>
+      <div class="att-btns">
+        <button class="att-btn att-btn-in" id="dual-btn-in" onclick="dualCheckIn()"><span class="att-btn-icon">🟢</span>출근</button>
+        <button class="att-btn att-btn-out" id="dual-btn-out" onclick="dualCheckOut()"><span class="att-btn-icon">🔴</span>퇴근</button>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">이번 주 현황</span></div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-val" id="dual-days">0</div><div class="stat-label">출근일수</div></div>
+        <div class="stat-item"><div class="stat-val" id="dual-hours">0</div><div class="stat-label">근무시간</div></div>
+        <div class="stat-item"><div class="stat-val" id="dual-sal">-</div><div class="stat-label">급여현황</div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">출퇴근 기록</span></div>
+      <div class="record-list" id="dual-records"></div>
+    </div>
+    <div style="padding:0 14px 8px;margin-top:8px;">
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--text2);">
+        ⚙️ 관리 기능은 <strong>관리 탭</strong>에서 사용하세요
+      </div>
+    </div>
+  </div>
+  <!-- 관리 탭 -->
+  <div id="dual-tab-manage" style="display:none;">
+    <div class="admin-tabs" style="background:var(--surface2);padding:8px 14px;">
+      <button class="admin-tab active" onclick="atab('overview');showDualManage()">📊 현황</button>
+      <button class="admin-tab" onclick="atab('workers');showDualManage()">👥 직원관리</button>
+      <button class="admin-tab" onclick="atab('attendance');showDualManage()">📋 출퇴근</button>
+    </div>
+    <div id="dual-manage-content"></div>
+  </div>
+</div>
+<!-- CONTRACT MODAL -->
+<div class="modal-overlay" id="modal-contract">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ct-title">📄 근로계약서</div>
+    <div class="modal-body">
+      <div id="ct-form">
+        <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6;">이번 주 첫 출근입니다. 직무에 맞는 계약서가 자동 생성됩니다.</div>
+        <div class="field-group"><div class="field-label">근로자 성명</div><input class="field-input" id="cf-name" type="text" readonly></div>
+        <div class="field-group"><div class="field-label">직무</div><input class="field-input" id="cf-job" type="text" readonly></div>
+        <div class="field-group"><div class="field-label">주민등록번호 앞 7자리</div><input class="field-input" id="cf-id" type="text" placeholder="예: 9001011" maxlength="7" inputmode="numeric"></div>
+        <div class="field-group"><div class="field-label">생년월일</div><input class="field-input" id="cf-birth" type="date"></div>
+        <div class="field-group"><div class="field-label">연락처 (010 뒤 8자리)</div><input class="field-input" id="cf-phone8" type="text" placeholder="예: 12345678" maxlength="8" inputmode="numeric" style="letter-spacing:3px;font-family:var(--mono);"></div>
+        <div class="field-group"><div class="field-label">주소</div><input class="field-input" id="cf-addr" type="text" placeholder="도로명 주소"></div>
+        <div class="field-group">
+          <div class="field-label">계약 주간</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input class="field-input" id="cf-sd" type="date">
+            <input class="field-input" id="cf-ed" type="date">
+          </div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">이번 주 근무 예정 요일</div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:5px;">
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-mon" style="width:17px;height:17px;accent-color:var(--accent);">월</label>
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-tue" style="width:17px;height:17px;accent-color:var(--accent);">화</label>
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-wed" style="width:17px;height:17px;accent-color:var(--accent);">수</label>
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-thu" style="width:17px;height:17px;accent-color:var(--accent);">목</label>
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-fri" style="width:17px;height:17px;accent-color:var(--accent);">금</label>
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-sat" style="width:17px;height:17px;accent-color:var(--accent);">토</label>
+            <label style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="wd-sun" style="width:17px;height:17px;accent-color:var(--accent);">일</label>
+          </div>
+        </div>
+      </div>
+      <div id="ct-preview" style="display:none;"></div>
+      <div id="ct-sign" style="display:none;">
+        <div style="margin-bottom:12px;font-size:13px;color:var(--text2);">아래에 손가락으로 서명하면 계약이 확정됩니다.</div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">근로자 서명</div>
+          <canvas id="sig-cv" style="width:100%;height:80px;background:#fff;border-radius:8px;touch-action:none;display:block;"></canvas>
+          <button onclick="clrSig()" style="margin-top:7px;font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font);">✕ 다시 서명</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1;" id="ct-back" onclick="ctBack()">닫기</button>
+      <button class="btn-success" id="ct-next" style="flex:2;" onclick="ctNext()">미리보기 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACT VIEW MODAL (관리자용 완성본) -->
+<div class="modal-overlay" id="modal-ct-view">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ctv-title">📄 계약서 완성본</div>
+    <div class="modal-body">
+      <div id="ctv-content"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1;" onclick="closeM('modal-ct-view')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACT VIEW MODAL (관리자용 계약서 완성본) -->
+<div class="modal-overlay" id="modal-ct-view">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ctv-title">📄 계약서 완성본</div>
+    <div class="modal-body">
+      <div id="ctv-content"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1;" onclick="closeM('modal-ct-view')">닫기</button>
+      <button class="btn-success" style="flex:2;" onclick="printCT()">🖨️ 인쇄 / 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 출퇴근 기록 추가 모달 -->
+<div class="modal-overlay" id="modal-add-att">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 출퇴근 기록 추가</div>
+    <div class="modal-body">
+      <div class="field-group">
+        <div class="field-label">직원 선택</div>
+        <select class="field-select" id="aa-worker"></select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">날짜</div>
+        <input class="field-input" id="aa-date" type="date">
+      </div>
+      <div class="field-group">
+        <div class="field-label">출근 시간</div>
+        <input class="field-input" id="aa-ci" type="time" value="09:00">
+      </div>
+      <div class="field-group">
+        <div class="field-label">퇴근 시간 (없으면 비워두세요)</div>
+        <input class="field-input" id="aa-co" type="time">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1;" onclick="closeM('modal-add-att')">취소</button>
+      <button class="btn-primary" style="flex:2;" onclick="addAttRecord()">기록 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 출퇴근 기록 수정 모달 -->
+<div class="modal-overlay" id="modal-edit-att">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ 출퇴근 기록 수정</div>
+    <div class="modal-body">
+      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;" id="edit-att-name">-</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px;" id="edit-att-date">-</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">출근 시간</div>
+        <input class="field-input" id="ea-ci" type="time">
+      </div>
+      <div class="field-group">
+        <div class="field-label">퇴근 시간 (없으면 비워두세요)</div>
+        <input class="field-input" id="ea-co" type="time">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-danger" style="flex:1;" onclick="deleteAttRecord()">🗑️ 삭제</button>
+      <button class="btn-secondary" style="flex:1;" onclick="closeM('modal-edit-att')">취소</button>
+      <button class="btn-success" style="flex:2;" onclick="saveAttRecord()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD WORKER MODAL -->
+<div class="modal-overlay" id="modal-addw">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👤 직원 등록</div>
+    <div class="modal-body">
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6;">⚠️ 여기 등록된 직원만 앱에 로그인할 수 있습니다.<br>이름 + 전화번호 뒷 4자리가 로그인 정보입니다.</div>
+      <div class="field-group"><div class="field-label">이름</div><input class="field-input" id="aw-name" type="text" placeholder="이름"></div>
+      <div class="field-group"><div class="field-label">전화번호 뒷 4자리</div><input class="field-input" id="aw-p4" type="text" placeholder="1234" maxlength="4" inputmode="numeric" style="letter-spacing:8px;font-size:20px;font-family:var(--mono);"></div>
+      <div class="field-group"><div class="field-label">현장</div><select class="field-select" id="aw-site"></select></div>
+      <div class="field-group"><div class="field-label">직무</div><select class="field-select" id="aw-job" onchange="updateWHint()"></select></div>
+      <div class="field-group"><div class="field-label">급여 단가</div><input class="field-input" id="aw-wage" type="number" inputmode="numeric"><div style="font-size:11px;color:var(--text3);margin-top:5px;" id="aw-whint"></div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1;" onclick="closeM('modal-addw')">취소</button>
+      <button class="btn-primary" style="flex:2;" onclick="addWorker()">등록하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+let D = {
+  sites:['Forest','sun','ocean'],
+  jobs:['메이드','인스펙터','하우스맨','베딩','더티'],
+  wt:{'메이드':'unit','인스펙터':'daily','하우스맨':'daily','베딩':'unit','더티':'unit'},
+  wages:{'메이드':12000,'인스펙터':120000,'하우스맨':120000,'베딩':12000,'더티':12000},
+  adminPw:'1201',
+  ceoPassword:'1201',
+  admins:[],
+  workers:[],
+  att:[],
+  sets:{key:'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s',sid:'139Om3SRpBiAALqIA2Ru2CPJ5WMyeSaryOeyjTjK0NkI'}, // 고정값
+  ownerSig:'',
+};
+const STORE='com_att_v2';
+function save(){try{localStorage.setItem(STORE,JSON.stringify(D));}catch(e){}}
+function load(){
+  try{
+    const d=localStorage.getItem(STORE);
+    if(d){
+      const p=JSON.parse(d);
+      // ceoPassword는 로컬 저장값 우선 (변경했을 경우 유지)
+      Object.assign(D,p);
+    }
+  }catch(e){}
+  if(!D.wt) D.wt={'메이드':'unit','인스펙터':'daily','하우스맨':'daily','베딩':'unit','더티':'unit'};
+  if(!D.sets) D.sets={key:'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s',sid:'139Om3SRpBiAALqIA2Ru2CPJ5WMyeSaryOeyjTjK0NkI'};
+  if(!D.admins) D.admins=[];
+  // ceoPassword 항상 '1201'로 고정 (이전 저장값 무시)
+  D.ceoPassword='1201';
+}
+
+// ── INIT ──
+let CU=null, CLK=null;
+function init(){
+  load();
+  showS('screen-login');
+  tickClock();
+  // 구글 시트에서 직원/관리자 목록 자동 동기화
+  syncFromSheet();
+}
+function showS(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+// ── LOGIN ──
+let lmode='worker';
+function setMode(m){
+  lmode=m;
+  document.querySelectorAll('.login-tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&m==='worker')||(i===1&&m==='admin')));
+  document.getElementById('lf-worker').style.display=m==='worker'?'block':'none';
+  document.getElementById('lf-admin').style.display=m==='admin'?'block':'none';
+}
+async function workerLogin(){
+  const name=document.getElementById('l-name').value.trim();
+  const p4=document.getElementById('l-phone4').value.trim();
+  if(!name||!p4){toast('이름과 전화번호 뒷 4자리를 입력하세요','error');return;}
+
+  // 로그인 시 항상 최신 데이터 먼저 동기화
+  await syncFromSheet();
+
+  const w=D.workers.find(x=>x.name===name&&x.p4===p4);
+  if(!w){toast('등록된 정보와 일치하지 않습니다.\n관리자에게 문의하세요','error');return;}
+  CU={type:'worker',wid:w.id};
+  loadWS(w); showS('screen-worker'); startClock();
+  const wk=wkey();
+  const hasC=D.att.some(a=>a.wid===w.id&&wkey(a.date)===wk&&a.hasC);
+  if(!hasC) setTimeout(()=>openCT(w),700);
+}
+async function adminLogin(){
+  const pw=document.getElementById('l-adminpw').value.trim();
+  const name=document.getElementById('l-admin-name').value.trim();
+  if(!name){toast('이름을 입력하세요','error');return;}
+  if(!pw){toast('전화번호 뒷 4자리를 입력하세요','error');return;}
+
+  // 대표 계정: comcorp00 + 1201
+  if(name.toLowerCase()==='comcorp00' && (pw==='1201'||pw===D.ceoPassword||pw==='com1201')){
+    D.ceoPassword='1201';
+    save();
+    CU={type:'ceo'};
+    loadCeoScreen();
+    showS('screen-ceo');
+    startClock();
+    return;
+  }
+
+  // 관리자 로그인 시 최신 데이터 먼저 동기화
+  await syncFromSheet();
+
+  if(!D.admins) D.admins=[];
+  const adm=D.admins.find(a=>a.name===name && String(a.pw)===String(pw));
+  if(!adm){toast('등록된 정보와 일치하지 않습니다\n대표에게 등록 여부를 확인하세요','error');return;}
+
+  CU={type:'admin',adminName:name};
+  const w=D.workers.find(x=>x.name===name);
+  if(w) CU.wid=w.id;
+  loadAS();
+  showS('screen-admin');
+  startClock();
+  toast(`${name}님, ${rMsg(MSGS_LOGIN)}`,'success');
+}
+
+// ── 대표 로그인 ──
+function ceoLogin(){
+  const pw=document.getElementById('l-ceopw').value.trim();
+  if(pw===D.ceoPassword){
+    CU={type:'ceo'}; loadCeoScreen(); showS('screen-ceo'); startClock();
+  } else {
+    toast('대표 비밀번호가 틀렸습니다','error');
+  }
+}
+function logout(){CU=null;clearInterval(CLK);document.getElementById('l-phone4').value='';document.getElementById('l-adminpw').value='';document.getElementById('l-name').value='';document.getElementById('l-admin-name').value='';showS('screen-login');}
+
+// ── CLOCK ──
+function startClock(){clearInterval(CLK);tickClock();CLK=setInterval(tickClock,1000);}
+function tickClock(){
+  const n=new Date();
+  const t=`${h2(n.getHours())}:${h2(n.getMinutes())}:${h2(n.getSeconds())}`;
+  const ec=document.getElementById('w-clock');if(ec)ec.textContent=t;
+  const ed=document.getElementById('w-date');if(ed)ed.textContent=fDateKR(n);
+  const ea=document.getElementById('a-date');if(ea)ea.textContent=fDateKR(n);
+  const dc=document.getElementById('dual-clock');if(dc)dc.textContent=t;
+  const dd=document.getElementById('dual-date');if(dd)dd.textContent=fDateKR(n);
+  const cd=document.getElementById('ceo-date');if(cd)cd.textContent=fDateKR(n);
+}
+function h2(n){return String(n).padStart(2,'0');}
+
+// ── WORKER SCREEN ──
+function loadWS(w){
+  document.getElementById('w-name').textContent=w.name;
+  document.getElementById('w-tname').textContent=w.name;
+  document.getElementById('w-tmeta').textContent=`${w.site} · ${w.job}`;
+  document.getElementById('w-meta').textContent=`${w.job} · ${w.site}`;
+  updWStat(w); renderWRecs(w); updBtns(w);
+}
+function updWStat(w){
+  const recs=wkRecs(w.id), days=recs.filter(r=>r.ci).length;
+  let tm=0; recs.forEach(r=>{if(r.ci&&r.co)tm+=(new Date(r.co)-new Date(r.ci))/60000;});
+  const hrs=Math.round(tm/60*10)/10;
+  const wt=w.wt||(D.wt[w.job]||'daily'), wage=w.wage||D.wages[w.job]||100000;
+  document.getElementById('w-days').textContent=days;
+  document.getElementById('w-hours').textContent=hrs;
+  document.getElementById('w-saldisp').textContent=wt==='unit'?'월산정':Math.round(days*wage/10000)+'만';
+  renderSalD(w,days,tm);
+}
+function renderSalD(w,days,tm){
+  const wt=w.wt||(D.wt[w.job]||'daily'), wage=w.wage||D.wages[w.job]||100000;
+  const el=document.getElementById('w-saldetail');
+  if(wt==='unit'){
+    el.innerHTML=`<div class="salary-row"><span class="salary-row-label">직무</span><span class="salary-row-val">${w.job}</span></div>
+    <div class="salary-row"><span class="salary-row-label">급여방식</span><span class="salary-row-val">유닛제</span></div>
+    <div class="salary-row"><span class="salary-row-label">유닛 단가</span><span class="salary-row-val">${wage.toLocaleString()}원/객실</span></div>
+    <div class="salary-row"><span class="salary-row-label">이번주 출근</span><span class="salary-row-val">${days}일</span></div>
+    <div class="salary-row"><span class="salary-row-label">총 근무시간</span><span class="salary-row-val">${Math.round(tm/60*10)/10}시간</span></div>
+    <div class="salary-row"><span class="salary-row-label salary-total">월급여</span><span class="salary-row-val salary-total">월말 정산</span></div>`;
+  } else {
+    el.innerHTML=`<div class="salary-row"><span class="salary-row-label">직무</span><span class="salary-row-val">${w.job}</span></div>
+    <div class="salary-row"><span class="salary-row-label">급여방식</span><span class="salary-row-val">일당제</span></div>
+    <div class="salary-row"><span class="salary-row-label">일당</span><span class="salary-row-val">${wage.toLocaleString()}원</span></div>
+    <div class="salary-row"><span class="salary-row-label">이번주 출근</span><span class="salary-row-val">${days}일</span></div>
+    <div class="salary-row"><span class="salary-row-label">총 근무시간</span><span class="salary-row-val">${Math.round(tm/60*10)/10}시간</span></div>
+    <div class="salary-row"><span class="salary-row-label salary-total">예상 급여</span><span class="salary-row-val salary-total">${(days*wage).toLocaleString()}원</span></div>`;
+  }
+}
+function renderWRecs(w){
+  const el=document.getElementById('w-records');
+  const cut=new Date(); cut.setDate(cut.getDate()-14);
+  const recs=D.att.filter(a=>a.wid===w.id&&new Date(a.date)>=cut).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!recs.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div>출퇴근 기록 없음</div>';return;}
+  el.innerHTML=recs.map(r=>{
+    const it=r.ci?fTime(r.ci):'-', ot=r.co?fTime(r.co):'미퇴근';
+    let hrs=''; if(r.ci&&r.co){const m=(new Date(r.co)-new Date(r.ci))/60000;hrs=`${Math.round(m/60*10)/10}h`;}
+    return `<div class="record-item"><div class="record-dot ${r.co?'dot-in':'dot-out'}"></div>
+    <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${fDateS(r.date)}</div>
+    <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">${it} → ${ot}</div></div>
+    <div style="font-size:12px;font-weight:700;color:var(--accent2);font-family:var(--mono);">${hrs}</div></div>`;
+  }).join('');
+}
+function updBtns(w){
+  const today=tday(); const r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  const bi=document.getElementById('btn-in'), bo=document.getElementById('btn-out');
+  if(r&&r.ci&&!r.co){bi.disabled=true;bo.disabled=false;}
+  else if(r&&r.ci&&r.co){bi.disabled=true;bo.disabled=true;}
+  else{bi.disabled=false;bo.disabled=true;}
+}
+function checkIn(){
+  const w=D.workers.find(x=>x.id===CU.wid); if(!w) return;
+  const today=tday(); let r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  if(r&&r.ci){toast('이미 출근 처리되었습니다','info');return;}
+  if(!r){r={id:Date.now()+'',wid:w.id,wname:w.name,site:w.site,job:w.job,date:today,ci:new Date().toISOString(),co:null,hasC:false,wage:w.wage||D.wages[w.job]||100000,wt:w.wt||(D.wt[w.job]||'daily')};D.att.push(r);}
+  else{r.ci=new Date().toISOString();}
+  save(); updBtns(w); updWStat(w); renderWRecs(w);
+  toast(rMsg(MSGS_IN),'success'); syncSh(r,'출근');
+}
+function checkOut(){
+  const w=D.workers.find(x=>x.id===CU.wid); if(!w) return;
+  const today=tday(); const r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  if(!r||!r.ci){toast('출근 기록이 없습니다','error');return;}
+  if(r.co){toast('이미 퇴근 처리되었습니다','info');return;}
+  r.co=new Date().toISOString(); save(); updBtns(w); updWStat(w); renderWRecs(w);
+  const mins=Math.round((new Date(r.co)-new Date(r.ci))/60000);
+  toast(`✅ 퇴근 완료 ${Math.floor(mins/60)}시간 ${mins%60}분`,'success'); syncSh(r,'퇴근');
+}
+
+// ── CONTRACT ──
+let CTW=null, CTS='form', CTD=null;
+let SC,SX,SD=false,SH=false;
+
+function openCT(w){
+  CTW=w; CTS='form'; CTD=null;
+  document.getElementById('cf-name').value=w.name;
+  document.getElementById('cf-job').value=w.job;
+  document.getElementById('cf-id').value='';
+  document.getElementById('cf-birth').value='';
+  document.getElementById('cf-addr').value='';
+  const n=new Date(), day=n.getDay();
+  const mon=new Date(n); mon.setDate(n.getDate()-(day===0?6:day-1));
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  document.getElementById('cf-sd').value=d2s(mon);
+  document.getElementById('cf-ed').value=d2s(sun);
+  ['mon','tue','wed','thu','fri','sat','sun'].forEach(k=>document.getElementById('wd-'+k).checked=false);
+  const map=['sun','mon','tue','wed','thu','fri','sat'];
+  document.getElementById('wd-'+map[n.getDay()]).checked=true;
+  document.getElementById('ct-title').textContent=`📄 ${w.job} 근로계약서`;
+  document.getElementById('ct-form').style.display='block';
+  document.getElementById('ct-preview').style.display='none';
+  document.getElementById('ct-sign').style.display='none';
+  document.getElementById('ct-next').textContent='미리보기 →';
+  document.getElementById('ct-back').textContent='닫기';
+  document.getElementById('modal-contract').classList.add('open');
+}
+function ctBack(){
+  if(CTS==='form'){closeM('modal-contract');}
+  else if(CTS==='preview'){CTS='form';document.getElementById('ct-form').style.display='block';document.getElementById('ct-preview').style.display='none';document.getElementById('ct-sign').style.display='none';document.getElementById('ct-next').textContent='미리보기 →';document.getElementById('ct-back').textContent='닫기';}
+  else if(CTS==='sign'){CTS='preview';document.getElementById('ct-preview').style.display='block';document.getElementById('ct-sign').style.display='none';document.getElementById('ct-next').textContent='서명하기 →';document.getElementById('ct-back').textContent='← 이전';}
+}
+function ctNext(){
+  if(CTS==='form'){
+    const id=document.getElementById('cf-id').value.trim();
+    const birth=document.getElementById('cf-birth').value;
+    const phone8=document.getElementById('cf-phone8')?document.getElementById('cf-phone8').value.trim():'';
+    const addr=document.getElementById('cf-addr').value.trim();
+    const sd=document.getElementById('cf-sd').value, ed=document.getElementById('cf-ed').value;
+    if(!id||!birth||!addr||!sd||!ed){toast('모든 항목을 입력하세요','error');return;}
+    if(phone8&&phone8.length!==8){toast('연락처는 010 뒤 8자리를 입력하세요','error');return;}
+    const wds={mon:document.getElementById('wd-mon').checked,tue:document.getElementById('wd-tue').checked,wed:document.getElementById('wd-wed').checked,thu:document.getElementById('wd-thu').checked,fri:document.getElementById('wd-fri').checked,sat:document.getElementById('wd-sat').checked,sun:document.getElementById('wd-sun').checked};
+    CTD={id,birth,phone8,addr,sd,ed,wds};
+    renderCT(CTW,CTD);
+    CTS='preview'; document.getElementById('ct-form').style.display='none'; document.getElementById('ct-preview').style.display='block';
+    document.getElementById('ct-next').textContent='서명하기 →'; document.getElementById('ct-back').textContent='← 이전';
+  } else if(CTS==='preview'){
+    CTS='sign'; document.getElementById('ct-preview').style.display='none'; document.getElementById('ct-sign').style.display='block';
+    document.getElementById('ct-next').textContent='✅ 서명완료 · 계약확정'; document.getElementById('ct-back').textContent='← 이전';
+    initSig();
+  } else if(CTS==='sign'){
+    const sig=SH?SC.toDataURL('image/png'):'';
+    const ci={...CTD,sig,at:new Date().toISOString()};
+    const today=tday(); let r=D.att.find(a=>a.wid===CTW.id&&a.date===today);
+    if(r){r.hasC=true;r.ci_info=ci;}
+    else{D.att.push({id:Date.now()+'',wid:CTW.id,wname:CTW.name,site:CTW.site,job:CTW.job,date:today,ci:null,co:null,hasC:true,ci_info:ci,wage:CTW.wage||D.wages[CTW.job]||100000,wt:CTW.wt||(D.wt[CTW.job]||'daily')});}
+    CTW.ci_info=ci; save(); closeM('modal-contract'); toast('계약서 작성 완료! 오늘도 잘 부탁드려요 😊','success');
+  }
+}
+
+// ── 직무별 계약서 렌더링 ──
+function renderCT(w,d){
+  const j=w.job;
+  let html='';
+  if(j==='메이드') html=ctRoomMaid(w,d);
+  else if(j==='인스펙터') html=ctInspector(w,d);
+  else if(j==='하우스맨') html=ctHouseman(w,d);
+  else html=ctOther(w,d);
+  document.getElementById('ct-preview').innerHTML=html;
+}
+
+// 동의확인 라인: 이름 자동기입 + 서명 자동복붙
+function agreeLineHTML(w){
+  const sig=(CTD&&CTD.sig)?CTD.sig:'';
+  const sigHTML=sig?`<span class="cagree-sigbox"><img src="${sig}"></span>`:'<span class="cagree-sigbox">&nbsp;</span>';
+  return `<div class="cagree-block">
+    <div class="cagree-row">
+      <span>동의 확인</span>
+      <span class="cagree-name">${w?w.name:''}</span>
+      ${sigHTML}
+      <span style="font-size:10px;color:#666;">(서명)</span>
+    </div>
+  </div>`;
+}
+function confirmLineHTML(w){
+  const sig=(CTD&&CTD.sig)?CTD.sig:'';
+  const sigHTML=sig?`<span class="cagree-sigbox"><img src="${sig}"></span>`:'<span class="cagree-sigbox">&nbsp;</span>';
+  return `<div class="cagree-block">
+    <div class="cagree-row">
+      <span>확인 동의</span>
+      <span class="cagree-name">${w?w.name:''}</span>
+      ${sigHTML}
+      <span style="font-size:10px;color:#666;">(서명)</span>
+    </div>
+  </div>`;
+}
+function wdBoxesHTML(wds){
+  const days=[{k:'mon',l:'월요일'},{k:'tue',l:'화요일'},{k:'wed',l:'수요일'},{k:'thu',l:'목요일'},{k:'fri',l:'금요일'},{k:'sat',l:'토요일'},{k:'sun',l:'일요일'}];
+  return `<div class="wdrow">${days.map(x=>`<div class="wdcell"><div class="wdlabel">${x.l.slice(0,1)}요일</div><div class="wdbox ${wds[x.k]?'ck':''}">${wds[x.k]?'✓':'□'}</div></div>`).join('')}</div>`;
+}
+function sigLineHTML(){const sig=(CTD&&CTD.sig)?CTD.sig:'';return `<div class="csignline">${sig?`<img src="${sig}">`:'&nbsp;'}</div>`;}
+function ctFooter(w,d){
+  const ownerSig=D.ownerSig||'';
+  const workerSig=(CTD&&CTD.sig)?CTD.sig:'';
+  const ownerSigHTML=ownerSig?`<img src="${ownerSig}" style="max-height:40px;max-width:100%;object-fit:contain;">`:'&nbsp;';
+  const workerSigHTML=workerSig?`<img src="${workerSig}" style="max-height:40px;max-width:100%;object-fit:contain;">`:'&nbsp;';
+  return `<div class="csignarea">
+    <div class="csignbox">
+      <div class="csignlabel">사업주</div>
+      <div class="csignline">${ownerSigHTML}</div>
+      <div class="csignname">씨오엠(COM) 박진용</div>
+      <div style="font-size:9px;color:#aaa;">서울 성동구 성덕정 15길 6-30</div>
+    </div>
+    <div class="csignbox">
+      <div class="csignlabel">근로자 (서명)</div>
+      <div class="csignline">${workerSigHTML}</div>
+      <div class="csignname">${w.name}</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;"><table>
+    <tr><td class="th">사업체명</td><td>씨오엠(COM)</td><td class="th">근로자 성명</td><td>${w.name}</td></tr>
+    <tr><td class="th">주소</td><td>서울특별시 성동구 성덕정 15길 6-30</td><td class="th">생년월일</td><td>${d.birth}</td></tr>
+    <tr><td class="th">연락처</td><td colspan="3">${d.phone8?'010-'+d.phone8.slice(0,4)+'-'+d.phone8.slice(4):'-'}</td></tr>
+    <tr><td class="th">대표자</td><td>박진용 (인)</td><td class="th">교부확인</td><td>${workerSigHTML}&nbsp;(인)</td></tr>
+  </table></div>
+  <div class="cfooter">2026년 ${d.sd.slice(5,7)}월 ${parseInt(d.sd.slice(8,10))}일 작성</div>`;
+}
+
+function ctRoomMaid(w,d){
+  const wage=w.wage||D.wages['메이드']||12000;
+  return `<div class="cdoc"><h2>근 로 계 약 서</h2><div class="csub">씨오엠(COM) 주단위 근로계약</div>
+  <div class="cintro">씨오엠(COM) (이하 "사업주"라 함)과 <strong>${w.name}</strong> (이하 "근로자"라 함)은 아래와 같이 주단위의 근로계약을 체결하고 이를 성실히 이행할 것을 약정한다.</div>
+  <div class="csec">계약기간 및 근무일</div>
+  <div class="crow"><span class="clabel">계약기간</span><span class="cval">2026년 ${d.sd.slice(5,7)}월 ${parseInt(d.sd.slice(8,10))}일 ~ 2026년 ${d.ed.slice(5,7)}월 ${parseInt(d.ed.slice(8,10))}일 (1주)</span></div>
+  ${wdBoxesHTML(d.wds)}
+  <div class="cnotice">업무의 특성상 일주일 전, 정하여진 방법에 따라 다음 1주간의 근무자별 근무일을 예정하는바, 주별 계속근무가 예정되지 않으며 근무여부도 일별로 변경되어 주단위의 근로계약서를 체결함을 이해하여 동의한다. 주단위 기간이 종료되며 계약기간은 사전통보 없이 자동 만료된다.</div>
+  ${agreeLineHTML(w)}
+  <div class="csec">근무장소 및 직무</div>
+  <div class="crow"><span class="clabel">지정 현장명</span><span class="cval"><strong>${w.site}</strong></span></div>
+  <div class="crow"><span class="clabel">담당 직무</span><span class="cval"><strong>메이드</strong></span></div>
+  <div class="cnotice">단, 근무장소와 담당직무는 업무상 필요가 있을 때 변경될 수 있음을 이해하여 동의한다.</div>
+  ${agreeLineHTML(w)}
+  <div class="csec">근로시간</div>
+  <table><tr><td class="th">해당업무</td><td class="th">근무시간</td><td class="th">휴게시간</td><td class="th">주휴일</td></tr>
+  <tr><td style="text-align:center;">메이드</td><td style="text-align:center;">09:00~18:00</td><td style="text-align:center;">근무중 60분</td><td style="text-align:center;">주중 첫번째 비번일</td></tr></table>
+  <div class="cnotice">근로시간 및 휴게시간은 업무(스케줄표)에 따라 조정될 수 있으며, 사전에 근로자에게 공지한다.</div>
+  ${confirmLineHTML(w)}
+  <div class="csec">임금 구성 (유닛제)</div>
+  <div class="cnotice"><strong>Unit ${wage.toLocaleString()}원</strong><br>매월 정비완료된 객실 수를 기준으로 산정<br>월급여 산정 = ${wage.toLocaleString()}원 × 당월 총 정비완료객실 수 (UNIT)<br>기산기간: 월 초일~말일, 익월 10일 지급 / 지급방법: 근로자 명의 예금통장 입금</div>
+  <div class="csec">근로자 정보</div>
+  <div class="crow"><span class="clabel">성 명</span><span class="cval">${w.name}</span></div>
+  <div class="crow"><span class="clabel">주민번호</span><span class="cval">${d.id}-*******</span></div>
+  <div class="crow"><span class="clabel">연락처</span><span class="cval">${d.phone8?'010-'+d.phone8.slice(0,4)+'-'+d.phone8.slice(4):'-'}</span></div>
+  <div class="crow"><span class="clabel">주 소</span><span class="cval">${d.addr}</span></div>
+  <div class="csec">물품제공 특약 (제8조)</div>
+  <div class="cnotice">회사는 업무수행에 필요한 물품을 제공하되, 담당업무가 변경되거나 퇴사 시 해당물품을 반환하여야 한다. 반납하지 않거나 훼손 시 물품가액에 해당하는 금액을 배상하기로 하되, 배상액을 근로자에게 고지한 다음달의 급여에서 공제하는 것에 동의한다.</div>
+  ${confirmLineHTML(w)}
+  <div class="csec">기밀유지 (제9조) / 업무위반 및 제재 (제10조)</div>
+  <div class="cnotice">① 근로자는 업무 수행과정에서 알게 된 회사 기밀과 본인의 급여수준 및 근로계약의 내용을 임의로 제3자에게 제공하거나 열람하게 해서는 안된다.<br>② 객실 내 흡연행위, 업무 수행과 무관한 휴식·취침 등 근무태만 행위를 하여서는 아니된다.</div>
+  <div class="cnotice" style="font-size:9px;">본 계약에 정하지 않은 사항은 관계 법령 및 취업규칙 등 제반 규정에 따른다.</div>
+  ${ctFooter(w,d)}</div>`;
+}
+
+function ctInspector(w,d){
+  const wage=w.wage||D.wages['인스펙터']||120000;
+  return `<div class="cdoc"><h2>프리랜서 근로계약서 주단위</h2><div class="csub">씨오엠(COM) 주단위 근로계약</div>
+  <div class="cintro">씨오엠(COM) (이하 "사업주"라 함)과 <strong>${w.name}</strong> (이하 "근로자"라 함)은 아래와 같이 주단위의 근로계약을 체결하고 이를 성실히 이행할 것을 약정한다.</div>
+  <table>
+  <tr><td class="th">제1조<br>(계약기간 및 근무일)</td><td>2026년 ${d.sd.slice(5,7)}월 ${parseInt(d.sd.slice(8,10))}일 ~ 2026년 ${d.ed.slice(5,7)}월 ${parseInt(d.ed.slice(8,10))}일 (1주) 중 아래 표기된 날${wdBoxesHTML(d.wds)}</td></tr>
+  <tr><td class="th">제2조<br>(계약기간의 이해)</td><td>업무의 특성상 일주일 전, 정하여진 방법에 따라 다음 1주간의 근무자별 근무일을 예정하는바, 주별 계속근무가 예정되지 않으며 근무여부도 일별로 변경되어 주단위의 근로계약서를 체결함을 이해하여 동의한다. 주단위 기간이 종료되며 계약기간은 사전통보 없이 자동 만료된다.${agreeLineHTML(w)}</td></tr>
+  <tr><td class="th">제3조<br>(근무장소 및 직무)</td><td>근무장소는 근무전 지시받은 현장 소재지로 한다.<br>지정 현장명 : <strong>${w.site}</strong><br>담당업무 : <strong>인스펙터</strong><br>단, 근무장소와 담당직무는 업무상 필요가 있을 때 변경될 수 있음을 이해하여 동의한다.</td></tr>
+  <tr><td class="th">제4조<br>(담당업무별 근로시간)</td><td><table><tr><td class="th">해당업무</td><td class="th">근무시간</td><td class="th">휴게시간</td><td class="th">주휴일</td></tr><tr><td style="text-align:center;">인스펙터</td><td style="text-align:center;">09:00~18:00</td><td style="text-align:center;">근무중 60분</td><td style="text-align:center;">주중 첫번째 비번일</td></tr></table>근로시간 및 휴게시간은 업무(스케줄표)에 따라 조정될 수 있으며, 사전에 근로자에게 공지한다.${confirmLineHTML(w)}</td></tr>
+  <tr><td class="th">제5조<br>(임금구성)</td><td><table><tr><td class="th">구분</td><td class="th">일금액</td><td class="th">산정방법</td></tr><tr><td>기본일당</td><td style="text-align:right;">83,336원</td><td>1일 소정근로시간 8시간 기준</td></tr><tr><td>직무수당</td><td style="text-align:right;">16,664원</td><td></td></tr><tr><td>주휴정산수당</td><td style="text-align:right;">20,000원</td><td></td></tr><tr><td><strong>일지급액</strong></td><td style="text-align:right;"><strong>${wage.toLocaleString()}원</strong></td><td>통상시급: 10,417원</td></tr></table>월급여 산정 = 일지급액 × 당월 총 근무일수</td></tr>
+  <tr><td class="th">제6조<br>(임금의 지급방법)</td><td>① 기산기간: 월 초일~말일, 익월 10일 지급<br>② 지급방법: 근로자 명의 예금통장 입금</td></tr>
+  <tr><td class="th">제7조<br>(퇴직급여)</td><td>퇴직급여는 근로자퇴직급여보장법에서 정하는 바에 따른다.</td></tr>
+  <tr><td class="th">제8조<br>(물품제공 특약)</td><td>회사는 업무수행에 필요한 물품을 제공하되, 담당업무가 변경되거나 퇴사 시 해당물품을 반환하여야 한다. 반납하지 않거나 훼손 시 물품가액에 해당하는 금액을 배상하기로 하되, 배상액을 근로자에게 고지한 다음달의 급여에서 공제하는 것에 동의한다.${confirmLineHTML(w)}</td></tr>
+  <tr><td class="th">제9조<br>(기밀유지)</td><td>① 근로자는 업무 수행과정에서 알게 된 회사 기밀과 본인의 급여수준 및 근로계약의 내용을 임의로 제3자에게 제공하거나 열람하게 해서는 안된다.<br>② 근로자는 전항에 대하여 위반할 경우 회사는 근로자에게 민·형사상 책임을 물을 수 있고 징계등의 인사조치를 취할 수 있다.</td></tr>
+  <tr><td class="th">제10조<br>(업무위반 및 제재)</td><td>근로자는 객실 정비 업무 수행 중 다음각호의 행위를 하여서는 아니된다.<br>① 객실 내 흡연행위<br>② 업무 수행과 무관한 휴식, 취침 등 근무태만 행위 등 기타 객실 정비 업무에 부적합 하다고 인정되는 행위<br>근로자가 제1항을 위반한 경우 회사는 해당 행위의 정도에 따라 경고 혹은 회사에 손해가 발생한 경우, 근로자는 관련법령에 따라 그 손해를 배상하여야 한다.</td></tr>
+  <tr><td class="th">제11조<br>(기타)</td><td>본 계약에 정하지 않은 사항은 관계 법령 및 취업규칙 등 제반 규정에 따른다.</td></tr>
+  </table>${ctFooter(w,d)}</div>`;
+}
+
+function ctHouseman(w,d){
+  const wage=w.wage||D.wages['하우스맨']||120000;
+  return `<div class="cdoc"><h2>프리랜서 근로계약서 주단위</h2><div class="csub">씨오엠(COM) 주단위 근로계약</div>
+  <div class="cintro">씨오엠(COM) (이하 "사업주"라 함)과 <strong>${w.name}</strong> (이하 "근로자"라 함)은 아래와 같이 주단위의 근로계약을 체결하고 이를 성실히 이행할 것을 약정한다.</div>
+  <table>
+  <tr><td class="th">제1조<br>(계약기간 및 근무일)</td><td>2026년 ${d.sd.slice(5,7)}월 ${parseInt(d.sd.slice(8,10))}일 ~ 2026년 ${d.ed.slice(5,7)}월 ${parseInt(d.ed.slice(8,10))}일 (1주) 중 아래 표기된 날${wdBoxesHTML(d.wds)}</td></tr>
+  <tr><td class="th">제2조<br>(계약기간의 이해)</td><td>업무의 특성상 일주일 전, 정하여진 방법에 따라 다음 1주간의 근무자별 근무일을 예정하는바, 주별 계속근무가 예정되지 않으며 근무여부도 일별로 변경되어 주단위의 근로계약서를 체결함을 이해하여 동의한다. 주단위 기간이 종료되며 계약기간은 사전통보 없이 자동 만료된다.${agreeLineHTML(w)}</td></tr>
+  <tr><td class="th">제3조<br>(근무장소 및 직무)</td><td>근무장소는 근무전 지시받은 현장 소재지로 한다.<br>지정 현장명 : <strong>${w.site}</strong><br>담당업무 : <strong>하우스맨 (주간)</strong><br>단, 근무장소와 담당직무는 업무상 필요가 있을 때 변경될 수 있음을 이해하여 동의한다.</td></tr>
+  <tr><td class="th">제4조<br>(담당업무별 근로시간)</td><td><table><tr><td class="th">해당업무</td><td class="th">근무시간</td><td class="th">휴게시간</td><td class="th">주휴일</td></tr><tr><td style="text-align:center;">하우스맨</td><td style="text-align:center;">9시간 근무</td><td style="text-align:center;">근무중 60분</td><td style="text-align:center;">주중 첫번째 비번일</td></tr></table>근로시간 및 휴게시간은 업무(스케줄표)에 따라 조정될 수 있으며, 사전에 근로자에게 공지한다.${confirmLineHTML(w)}</td></tr>
+  <tr><td class="th">제5조<br>(임금구성)</td><td><table><tr><td class="th">구분</td><td class="th">일금액</td><td class="th">산정방법</td></tr><tr><td>기본일당</td><td style="text-align:right;">83,336원</td><td>1일 소정근로시간 8시간 기준</td></tr><tr><td>직무수당</td><td style="text-align:right;">16,664원</td><td></td></tr><tr><td>주휴정산수당</td><td style="text-align:right;">20,000원</td><td></td></tr><tr><td><strong>일지급액</strong></td><td style="text-align:right;"><strong>${wage.toLocaleString()}원</strong></td><td>통상시급: 10,417원</td></tr></table>월급여 산정 = 일지급액 × 당월 총 근무일수</td></tr>
+  <tr><td class="th">제6조<br>(임금의 지급방법)</td><td>① 기산기간: 월 초일~말일, 익월 10일 지급<br>② 지급방법: 근로자 명의 예금통장 입금</td></tr>
+  <tr><td class="th">제7조<br>(퇴직급여)</td><td>퇴직급여는 근로자퇴직급여보장법에서 정하는 바에 따른다.</td></tr>
+  <tr><td class="th">제8조<br>(물품제공 특약)</td><td>회사는 업무수행에 필요한 물품을 제공하되, 담당업무가 변경되거나 퇴사 시 해당물품을 반환하여야 한다. 반납하지 않거나 훼손 시 물품가액에 해당하는 금액을 배상하기로 하되, 배상액을 근로자에게 고지한 다음달의 급여에서 공제하는 것에 동의한다.${confirmLineHTML(w)}</td></tr>
+  <tr><td class="th">제9조<br>(기밀유지)</td><td>① 근로자는 업무 수행과정에서 알게 된 회사 기밀과 본인의 급여수준 및 근로계약의 내용을 임의로 제3자에게 제공하거나 열람하게 해서는 안된다.<br>② 근로자는 전항에 대하여 위반할 경우 회사는 근로자에게 민·형사상 책임을 물을 수 있고 징계등의 인사조치를 취할 수 있다.</td></tr>
+  <tr><td class="th">제10조<br>(업무위반 및 제재)</td><td>근로자는 객실 정비 업무 수행 중 다음각호의 행위를 하여서는 아니된다.<br>① 객실 내 흡연행위<br>② 업무 수행과 무관한 휴식, 취침 등 근무태만 행위 등 기타 객실 정비 업무에 부적합 하다고 인정되는 행위<br>근로자가 제1항을 위반한 경우 회사는 해당 행위의 정도에 따라 경고 혹은 회사에 손해가 발생한 경우, 근로자는 관련법령에 따라 그 손해를 배상하여야 한다.</td></tr>
+  <tr><td class="th">제11조<br>(기타)</td><td>본 계약에 정하지 않은 사항은 관계 법령 및 취업규칙 등 제반 규정에 따른다.</td></tr>
+  </table>${ctFooter(w,d)}</div>`;
+}
+
+function ctOther(w,d){
+  const wt=w.wt||(D.wt[w.job]||'daily'), wage=w.wage||D.wages[w.job]||100000;
+  const salD=wt==='unit'?`유닛제: ${wage.toLocaleString()}원/객실 × 당월 정비완료 객실 수`:`일당제: ${wage.toLocaleString()}원/일 × 당월 총 근무일수`;
+  return `<div class="cdoc"><h2>근 로 계 약 서</h2><div class="csub">씨오엠(COM) 주단위 근로계약</div>
+  <div class="cintro">씨오엠(COM) (이하 "사업주"라 함)과 <strong>${w.name}</strong> (이하 "근로자"라 함)은 아래와 같이 주단위의 근로계약을 체결하고 이를 성실히 이행할 것을 약정한다.</div>
+  <div class="csec">계약기간 및 근무일</div>
+  <div class="crow"><span class="clabel">계약기간</span><span class="cval">2026년 ${d.sd.slice(5,7)}월 ${parseInt(d.sd.slice(8,10))}일 ~ 2026년 ${d.ed.slice(5,7)}월 ${parseInt(d.ed.slice(8,10))}일 (1주)</span></div>
+  ${wdBoxesHTML(d.wds)}
+  <div class="cnotice">업무의 특성상 주단위 근로계약서를 체결함을 이해하여 동의한다. 주단위 기간이 종료되며 계약기간은 사전통보 없이 자동 만료된다.</div>
+  ${agreeLineHTML(w)}
+  <div class="csec">근무장소 및 직무</div>
+  <div class="crow"><span class="clabel">지정 현장명</span><span class="cval"><strong>${w.site}</strong></span></div>
+  <div class="crow"><span class="clabel">담당 직무</span><span class="cval"><strong>${w.job}</strong></span></div>
+  ${agreeLineHTML(w)}
+  <div class="csec">임금</div>
+  <div class="cnotice">${salD}<br>기산기간: 월 초일~말일, 익월 10일 지급 / 지급방법: 근로자 명의 예금통장 입금</div>
+  <div class="csec">근로자 정보</div>
+  <div class="crow"><span class="clabel">성 명</span><span class="cval">${w.name}</span></div>
+  <div class="crow"><span class="clabel">주민번호</span><span class="cval">${d.id}-*******</span></div>
+  <div class="crow"><span class="clabel">연락처</span><span class="cval">${d.phone8?'010-'+d.phone8.slice(0,4)+'-'+d.phone8.slice(4):'-'}</span></div>
+  <div class="crow"><span class="clabel">주 소</span><span class="cval">${d.addr}</span></div>
+  <div class="cnotice" style="font-size:9px;">본 계약에 정하지 않은 사항은 관계 법령 및 취업규칙 등 제반 규정에 따른다.</div>
+  ${ctFooter(w,d)}</div>`;
+}
+
+// ── Signature ──
+function initSig(){
+  SC=document.getElementById('sig-cv'); if(!SC)return;
+  SX=SC.getContext('2d'); SH=false;
+  const r=SC.getBoundingClientRect();
+  SC.width=r.width*window.devicePixelRatio; SC.height=r.height*window.devicePixelRatio;
+  SX.scale(window.devicePixelRatio,window.devicePixelRatio);
+  SX.strokeStyle='#111'; SX.lineWidth=2.5; SX.lineCap='round'; SX.lineJoin='round';
+  function gp(e){const rc=SC.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-rc.left,y:s.clientY-rc.top};}
+  SC.onmousedown=e=>{SD=true;const p=gp(e);SX.beginPath();SX.moveTo(p.x,p.y);};
+  SC.onmousemove=e=>{if(!SD)return;const p=gp(e);SX.lineTo(p.x,p.y);SX.stroke();SH=true;};
+  SC.onmouseup=()=>SD=false;
+  SC.addEventListener('touchstart',e=>{e.preventDefault();SD=true;const p=gp(e);SX.beginPath();SX.moveTo(p.x,p.y);},{passive:false});
+  SC.addEventListener('touchmove',e=>{e.preventDefault();if(!SD)return;const p=gp(e);SX.lineTo(p.x,p.y);SX.stroke();SH=true;},{passive:false});
+  SC.addEventListener('touchend',()=>SD=false);
+}
+function clrSig(){if(SX&&SC){SX.clearRect(0,0,SC.width,SC.height);SH=false;}}
+
+// ── ADMIN ──
+function loadAS(){renderOV();renderWL();renderAL('all');renderWageList();renderSiteList();loadSets();updBanner();}
+function atab(t){
+  const ts=['overview','workers','attendance','myatt'];
+  document.querySelectorAll('#screen-admin .admin-tab').forEach((el,i)=>el.classList.toggle('active',ts[i]===t));
+  ['overview','workers','attendance','myatt','settings'].forEach(x=>{ const el=document.getElementById('admin-tab-'+x); if(el) el.style.display=x===t?'block':'none'; });
+  if(t==='myatt') loadAdminMyAtt();
+}
+function loadAdminMyAtt(){
+  const el=document.getElementById('admin-myatt-content');
+  if(!el) return;
+  const adminName=CU&&CU.adminName;
+
+  if(!adminName){
+    el.innerHTML=`<div style="padding:20px;">
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;font-size:13px;color:var(--text2);line-height:1.7;text-align:center;">
+        <div style="font-size:32px;margin-bottom:10px;">👤</div>
+        관리자 이름 정보가 없습니다.<br>다시 로그인해 주세요.
+      </div></div>`;
+    return;
+  }
+
+  const w=D.workers.find(x=>x.name===adminName);
+  if(!w){
+    el.innerHTML=`<div style="padding:20px;">
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;font-size:13px;color:var(--text2);line-height:1.7;text-align:center;">
+        <div style="font-size:32px;margin-bottom:10px;">📋</div>
+        <strong>${adminName}</strong>님은 직원으로 미등록 상태입니다.<br>
+        직원관리 탭에서 직원으로 등록하면<br>출퇴근 기록이 가능합니다.
+      </div></div>`;
+    return;
+  }
+
+  const today=tday();
+  const rec=D.att.find(a=>a.wid===w.id&&a.date===today);
+  const ciDis=(rec&&rec.ci)?'disabled':'';
+  const coDis=(!rec||!rec.ci||rec.co)?'disabled':'';
+  const wkR=wkRecs(w.id), days=wkR.filter(r=>r.ci).length;
+  let tm=0; wkR.forEach(r=>{if(r.ci&&r.co)tm+=(new Date(r.co)-new Date(r.ci))/60000;});
+  const cut=new Date(); cut.setDate(cut.getDate()-14);
+  const recs=D.att.filter(a=>a.wid===w.id&&new Date(a.date)>=cut).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const now=new Date();
+  const clockStr=`${h2(now.getHours())}:${h2(now.getMinutes())}:${h2(now.getSeconds())}`;
+
+  el.innerHTML=`
+    <div class="worker-hero" style="margin:16px;">
+      <div class="worker-name">${w.name}</div>
+      <div class="worker-meta">${w.job} · ${w.site} · 관리자 겸직</div>
+      <div class="clock-display" id="admin-myatt-clock">${clockStr}</div>
+      <div class="date-display" id="admin-myatt-date">${fDateKR(now)}</div>
+      <div class="att-btns">
+        <button class="att-btn att-btn-in" ${ciDis} onclick="adminCheckIn('${w.id}')"><span class="att-btn-icon">🟢</span>출근</button>
+        <button class="att-btn att-btn-out" ${coDis} onclick="adminCheckOut('${w.id}')"><span class="att-btn-icon">🔴</span>퇴근</button>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">이번 주 현황</span></div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-val">${days}</div><div class="stat-label">출근일수</div></div>
+        <div class="stat-item"><div class="stat-val">${Math.round(tm/60*10)/10}</div><div class="stat-label">근무시간</div></div>
+        <div class="stat-item"><div class="stat-val">${(D.wt[w.job]||'daily')==='unit'?'월산정':Math.round(days*(w.wage||D.wages[w.job]||0)/10000)+'만'}</div><div class="stat-label">급여현황</div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">출퇴근 기록</span>
+        <span style="font-size:11px;color:var(--text3);">탭하면 수정 가능</span>
+      </div>
+      <div class="record-list">${recs.length?recs.map(r=>{
+        const it=r.ci?fTime(r.ci):'-', ot=r.co?fTime(r.co):'미퇴근';
+        let hrs=''; if(r.ci&&r.co){const m=(new Date(r.co)-new Date(r.ci))/60000;hrs=Math.round(m/60*10)/10+'h';}
+        return `<div class="record-item" style="cursor:pointer;" onclick="openEditAtt('${r.id}')">
+          <div class="record-dot ${r.co?'dot-in':'dot-out'}"></div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">${fDateS(r.date)}</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">${it} → ${ot}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:700;color:var(--accent2);font-family:var(--mono);">${hrs}</div>
+            <div style="font-size:10px;color:var(--text3);">✏️ 수정</div>
+          </div>
+        </div>`;
+      }).join(''):'<div class="empty-state"><div class="empty-state-icon">📭</div>출퇴근 기록 없음</div>'}</div>
+    </div>`;
+}
+function adminCheckIn(wid){
+  const w=D.workers.find(x=>x.id===wid);if(!w)return;
+  const today=tday();let r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  if(r&&r.ci){toast('이미 출근 처리되었습니다','info');return;}
+  if(!r){r={id:Date.now()+'',wid:w.id,wname:w.name,site:w.site,job:w.job,date:today,ci:new Date().toISOString(),co:null,hasC:true,wage:w.wage||D.wages[w.job]||100000,wt:w.wt||(D.wt[w.job]||'daily')};D.att.push(r);}
+  else{r.ci=new Date().toISOString();}
+  save();loadAdminMyAtt();toast(rMsg(MSGS_IN),'success');syncSh(r,'출근');
+}
+function adminCheckOut(wid){
+  const w=D.workers.find(x=>x.id===wid);if(!w)return;
+  const today=tday(),r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  if(!r||!r.ci){toast('출근 기록이 없습니다','error');return;}
+  if(r.co){toast('이미 퇴근 처리되었습니다','info');return;}
+  r.co=new Date().toISOString();save();loadAdminMyAtt();
+  const mins=Math.round((new Date(r.co)-new Date(r.ci))/60000);
+  toast(rMsg(MSGS_OUT),'success');syncSh(r,'퇴근');
+}
+function renderOV(){
+  const today=tday(), tr=D.att.filter(a=>a.date===today&&a.ci);
+  document.getElementById('s-today').textContent=tr.length;
+  document.getElementById('s-workers').textContent=D.workers.length;
+  document.getElementById('s-sites').textContent=D.sites.length;
+  const wr=D.att.filter(a=>wkey(a.date)===wkey()&&a.ci);
+  const ts=wr.reduce((s,a)=>a.wt==='daily'?s+(a.wage||0):s,0);
+  // 급여는 대표만 조회 가능
+  document.getElementById('job-overview').innerHTML=D.jobs.map(j=>`
+    <div class="record-item"><div style="flex:1;"><div style="font-size:13px;font-weight:700;">${j}</div></div>
+    <div style="font-size:13px;color:var(--text2);">${tr.filter(a=>a.job===j).length}명 출근</div></div>`).join('');
+}
+let wfv='all';
+function fworker(v,el){wfv=v;document.querySelectorAll('#wfbar .filter-chip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');renderWL();}
+function renderWL(){
+  document.getElementById('wfbar').innerHTML=`<button class="filter-chip ${wfv==='all'?'active':''}" onclick="fworker('all',this)">전체</button>`+D.jobs.map(j=>`<button class="filter-chip ${wfv===j?'active':''}" onclick="fworker('${j}',this)">${j}</button>`).join('');
+  const el=document.getElementById('worker-list');
+  let ws=D.workers; if(wfv!=='all')ws=ws.filter(w=>w.job===wfv);
+  if(!ws.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">👥</div>등록된 직원이 없습니다</div>';return;}
+  const today=tday();
+  el.innerHTML=ws.map(w=>{
+    const r=D.att.find(a=>a.wid===w.id&&a.date===today);
+    let sc='pill-off',st='미출근'; if(r&&r.ci&&!r.co){sc='pill-in';st='출근중';}else if(r&&r.co){sc='pill-out';st='퇴근';}
+    const wr=wkRecs(w.id),days=wr.filter(x=>x.ci).length;
+    const wt=w.wt||(D.wt[w.job]||'daily');
+    const ss=wt==='unit'?'유닛':`${(days*(w.wage||D.wages[w.job]||0)/10000).toFixed(0)}만원`;
+    return `<div class="worker-card" id="wc-${w.id}">
+    <div class="worker-card-header" onclick="twc('${w.id}')">
+      <div class="worker-avatar">${w.name.charAt(0)}</div>
+      <div class="worker-info"><div class="worker-card-name">${w.name}</div><div class="worker-card-meta">${w.job} · ${w.site} · 📱****${w.p4}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        <span class="status-pill ${sc}">${st}</span>
+        <span style="font-size:10px;color:var(--text3);">${days}일 · ${ss}</span>
+      </div>
+    </div>
+    <div class="worker-detail" id="wd-${w.id}">
+      <div class="detail-grid">
+        <div class="detail-box"><div class="detail-box-val">${days}</div><div class="detail-box-label">이번주 출근</div></div>
+        <div class="detail-box"><div class="detail-box-val">${wt==='unit'?'-':(days*(w.wage||D.wages[w.job]||0)/10000).toFixed(0)}</div><div class="detail-box-label">${wt==='unit'?'유닛제':'급여(만원)'}</div></div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn-secondary" onclick="eJob('${w.id}')">직무변경</button>
+        <button class="btn-secondary" onclick="eSite('${w.id}')">현장변경</button>
+        <button class="btn-secondary" onclick="viewCT('${w.id}')">계약서 보기</button>
+        <button class="btn-danger" onclick="delW('${w.id}')">삭제</button>
+      </div>
+    </div></div>`;
+  }).join('');
+}
+function twc(id){document.getElementById('wd-'+id).classList.toggle('open');}
+// 관리자용 계약서 완성본 조회
+function viewCT(wid){
+  const w=D.workers.find(x=>x.id===wid);
+  if(!w){toast('직원 정보를 찾을 수 없습니다','error');return;}
+  // 이번 주 또는 가장 최근 계약 정보 찾기
+  const recs=D.att.filter(a=>a.wid===wid&&a.hasC&&a.ci_info).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!recs.length){
+    toast('작성된 계약서가 없습니다','error');
+    return;
+  }
+  const latestRec=recs[0];
+  const ci=latestRec.ci_info;
+  // CTD와 CTW를 임시로 설정해서 계약서 렌더링
+  const prevCTW=CTW, prevCTD=CTD;
+  CTW=w; CTD=ci;
+  // 계약서 HTML 생성
+  let html='';
+  const j=w.job;
+  if(j==='메이드') html=ctRoomMaid(w,ci);
+  else if(j==='인스펙터') html=ctInspector(w,ci);
+  else if(j==='하우스맨') html=ctHouseman(w,ci);
+  else html=ctOther(w,ci);
+  CTW=prevCTW; CTD=prevCTD;
+  document.getElementById('ctv-title').textContent=`📄 ${w.name} · ${w.job} 계약서`;
+  document.getElementById('ctv-content').innerHTML=html
+    + `<div style="margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--text3);">
+        작성일시: ${new Date(ci.at||ci.signedAt||latestRec.date).toLocaleString('ko-KR')}
+       </div>`;
+  document.getElementById('modal-ct-view').classList.add('open');
+}
+
+function eJob(id){const w=D.workers.find(x=>x.id===id);if(!w)return;const j=prompt(`직무:\n${D.jobs.join(', ')}\n\n현재: ${w.job}`);if(j&&D.jobs.includes(j)){w.job=j;w.wt=D.wt[j]||'daily';w.wage=D.wages[j]||100000;save();renderWL();toast('직무 변경 완료! ✅','success');}}
+function eSite(id){const w=D.workers.find(x=>x.id===id);if(!w)return;const s=prompt(`현장:\n${D.sites.join(', ')}\n\n현재: ${w.site}`);if(s&&D.sites.includes(s)){w.site=s;save();renderWL();toast('현장 변경 완료! ✅','success');}}
+function delW(id){if(!confirm('정말 삭제하시겠습니까?\n이 직원은 로그인할 수 없게 됩니다.'))return;D.workers=D.workers.filter(w=>w.id!==id);save();syncDeleteWorker(id);renderWL();renderOV();toast('삭제됐어요 🗑️','info');}
+function openAddW(){
+  document.getElementById('aw-site').innerHTML=D.sites.map(s=>`<option value="${s}">${s}</option>`).join('');
+  document.getElementById('aw-job').innerHTML=D.jobs.map(j=>`<option value="${j}">${j}</option>`).join('');
+  document.getElementById('aw-name').value=''; document.getElementById('aw-p4').value='';
+  updateWHint(); document.getElementById('modal-addw').classList.add('open');
+}
+function updateWHint(){const j=document.getElementById('aw-job')?.value;if(!j)return;const wt=D.wt[j]||'daily';document.getElementById('aw-wage').value=D.wages[j]||0;document.getElementById('aw-whint').textContent=wt==='unit'?'유닛제 — 객실당 단가 (원)':'일당제 — 하루 일당 (원)';}
+function addWorker(){
+  const name=document.getElementById('aw-name').value.trim(), p4=document.getElementById('aw-p4').value.trim();
+  const site=document.getElementById('aw-site').value, job=document.getElementById('aw-job').value;
+  const wage=parseInt(document.getElementById('aw-wage').value)||D.wages[job]||100000;
+  if(!name||!p4){toast('이름과 전화번호 뒷 4자리를 입력하세요','error');return;}
+  if(!/^\d{4}$/.test(p4)){toast('전화번호 뒷 4자리 숫자를 정확히 입력하세요','error');return;}
+  if(D.workers.find(w=>w.name===name&&w.p4===p4)){toast('동일한 정보가 이미 등록되어 있습니다','error');return;}
+  const newW={id:Date.now()+'',name,p4,site,job,wage,wt:D.wt[job]||'daily',createdAt:new Date().toISOString()};
+  D.workers.push(newW);
+  save(); syncWorker(newW); closeM('modal-addw'); renderWL(); renderOV(); toast(`${name}님 등록 완료! 반갑습니다 👋`,'success');
+}
+let afv='all';
+function fatt(v,el){afv=v;document.querySelectorAll('#admin-tab-attendance .filter-chip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');renderAL(v);}
+function renderAL(filter){
+  const el=document.getElementById('att-list');
+  let rs=[...D.att].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const today=tday(),wk=wkey();
+  if(filter==='today')rs=rs.filter(r=>r.date===today);
+  else if(filter==='week')rs=rs.filter(r=>wkey(r.date)===wk);
+  if(!rs.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div>기록 없음</div>';return;}
+  el.innerHTML=rs.map(r=>{
+    const it=r.ci?fTime(r.ci):'-', ot=r.co?fTime(r.co):'미퇴근';
+    let hrs=''; if(r.ci&&r.co){const m=(new Date(r.co)-new Date(r.ci))/60000;hrs=`${Math.round(m/60*10)/10}h`;}
+    return `<div class="record-item"><div class="record-dot ${r.co?'dot-in':'dot-out'}"></div>
+    <div style="flex:1;"><div style="font-size:13px;font-weight:700;">${r.wname} <span class="tag">${r.job||''}</span></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:1px;">${r.site} · ${fDateS(r.date)}</div></div>
+    <div style="text-align:right;"><div style="font-size:11px;font-family:var(--mono);color:var(--text2);">${it}→${ot}</div>
+    <div style="font-size:11px;font-weight:700;color:var(--accent2);font-family:var(--mono);">${hrs}</div></div></div>`;
+  }).join('');
+}
+function renderWageList(){document.getElementById('wage-list').innerHTML=D.jobs.map(j=>`<div class="settings-row"><div style="flex:1;"><div class="settings-row-label">${j}</div><div class="settings-row-sub">${(D.wt[j]||'daily')==='unit'?'유닛제 (원/객실)':'일당제 (원/일)'}</div></div><input class="settings-input" type="number" value="${D.wages[j]||0}" style="width:110px;" onchange="D.wages['${j}']=parseInt(this.value)||0;save();"></div>`).join('');}
+function renderSiteList(){document.getElementById('site-list').innerHTML=D.sites.map((s,i)=>`<div class="settings-row"><div style="flex:1;"><div class="settings-row-label">${s}</div></div><button class="btn-danger" onclick="delSite(${i})">삭제</button></div>`).join('');}
+function addSite(){const n=prompt('새 현장 이름:');if(!n||!n.trim())return;if(D.sites.includes(n.trim())){toast('이미 있는 현장입니다','error');return;}D.sites.push(n.trim());save();renderSiteList();toast('새 현장이 추가됐어요! 🏢','success');}
+function delSite(i){if(!confirm(`"${D.sites[i]}" 삭제?`))return;D.sites.splice(i,1);save();renderSiteList();renderOV();}
+function loadSets(){document.getElementById('gs-key').value=D.sets.key||'';document.getElementById('gs-id').value=D.sets.sid||'';}
+function saveSets(){D.sets.key=document.getElementById('gs-key').value.trim();D.sets.sid=document.getElementById('gs-id').value.trim();save();updBanner();}
+function updBanner(){const el=document.getElementById('sheets-banner');if(!el)return;if(D.sets.key&&D.sets.sid){el.style.background='rgba(16,185,129,.1)';el.style.borderColor='rgba(16,185,129,.3)';el.innerHTML='<div class="setup-notice-title" style="color:var(--success);">✅ Google Sheets 연동 설정됨</div><div class="setup-notice-text">출퇴근 기록이 자동으로 구글 시트에 기록됩니다.</div>';}else{el.style.background='rgba(245,158,11,.1)';el.style.borderColor='rgba(245,158,11,.3)';el.innerHTML='<div class="setup-notice-title">⚠️ Google Sheets 미연동</div><div class="setup-notice-text">설정 탭에서 API Key와 스프레드시트 ID를 입력하세요.</div>';}}
+function chgApw(){const pw=document.getElementById('new-apw').value.trim();if(!pw||pw.length<4){toast('4자리 이상 입력하세요','error');return;}D.adminPw=pw;save();document.getElementById('new-apw').value='';toast('비밀번호 변경 완료! 🔒','success');}
+
+
+// ── 사업주 서명 관리 ──
+let ownerSigCV=null,ownerSigCX=null,ownerSigDrawing=false;
+function initOwnerSigCanvas(){
+  ownerSigCV=document.getElementById('owner-sig-cv');
+  if(!ownerSigCV)return;
+  ownerSigCX=ownerSigCV.getContext('2d');
+  const r=ownerSigCV.getBoundingClientRect();
+  ownerSigCV.width=r.width*window.devicePixelRatio;
+  ownerSigCV.height=r.height*window.devicePixelRatio;
+  ownerSigCX.scale(window.devicePixelRatio,window.devicePixelRatio);
+  ownerSigCX.strokeStyle='#111';ownerSigCX.lineWidth=2.5;ownerSigCX.lineCap='round';ownerSigCX.lineJoin='round';
+  // 기존 저장된 서명 불러오기
+  if(D.ownerSig){
+    const img=new Image();
+    img.onload=()=>ownerSigCX.drawImage(img,0,0,r.width,r.height);
+    img.src=D.ownerSig;
+    document.getElementById('owner-sig-status').textContent='✅ 저장된 서명이 있습니다';
+    document.getElementById('owner-sig-status').style.color='var(--success)';
+  }
+  function gp(e){const rc=ownerSigCV.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-rc.left,y:s.clientY-rc.top};}
+  ownerSigCV.onmousedown=e=>{ownerSigDrawing=true;const p=gp(e);ownerSigCX.beginPath();ownerSigCX.moveTo(p.x,p.y);};
+  ownerSigCV.onmousemove=e=>{if(!ownerSigDrawing)return;const p=gp(e);ownerSigCX.lineTo(p.x,p.y);ownerSigCX.stroke();};
+  ownerSigCV.onmouseup=()=>ownerSigDrawing=false;
+  ownerSigCV.addEventListener('touchstart',e=>{e.preventDefault();ownerSigDrawing=true;const p=gp(e);ownerSigCX.beginPath();ownerSigCX.moveTo(p.x,p.y);},{passive:false});
+  ownerSigCV.addEventListener('touchmove',e=>{e.preventDefault();if(!ownerSigDrawing)return;const p=gp(e);ownerSigCX.lineTo(p.x,p.y);ownerSigCX.stroke();},{passive:false});
+  ownerSigCV.addEventListener('touchend',()=>ownerSigDrawing=false);
+}
+function saveOwnerSig(){
+  if(!ownerSigCV){toast('서명 캔버스를 찾을 수 없습니다','error');return;}
+  D.ownerSig=ownerSigCV.toDataURL('image/png');
+  save();
+  const el=document.getElementById('owner-sig-status');
+  el.textContent='✅ 사업주 서명이 저장되었습니다';
+  el.style.color='var(--success)';
+  toast('서명이 저장됐어요! ✍️','success');
+}
+function clrOwnerSig(){
+  if(!ownerSigCV||!ownerSigCX)return;
+  const r=ownerSigCV.getBoundingClientRect();
+  ownerSigCX.clearRect(0,0,r.width*window.devicePixelRatio,r.height*window.devicePixelRatio);
+  D.ownerSig=''; save();
+  const el=document.getElementById('owner-sig-status');
+  el.textContent='서명이 삭제되었습니다';
+  el.style.color='var(--text3)';
+}
+
+// ════════════════════════════════════════
+// 겸직 관리자 (DUAL)
+// ════════════════════════════════════════
+function loadDualScreen(w){
+  document.getElementById('dual-name').textContent=w.name;
+  document.getElementById('dual-tname').textContent=w.name;
+  document.getElementById('dual-tmeta').textContent=`${w.site} · ${w.job} · 관리자 겸직`;
+  document.getElementById('dual-meta').textContent=`${w.job} · ${w.site} (관리자 겸직)`;
+  updDualStat(w); renderDualRecs(w); updDualBtns(w);
+}
+function dualTab(t){
+  document.querySelectorAll('#screen-admin-dual .admin-tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&t==='work')||(i===1&&t==='manage')));
+  document.getElementById('dual-tab-work').style.display=t==='work'?'block':'none';
+  document.getElementById('dual-tab-manage').style.display=t==='manage'?'block':'none';
+  if(t==='manage') showDualManage();
+}
+function showDualManage(){
+  // 관리자 탭 콘텐츠를 dual-manage-content에 복사
+  const tabs=['overview','workers','attendance'];
+  const active=tabs.find(t=>document.getElementById('admin-tab-'+t).style.display!=='none')||'overview';
+  // 관리자 데이터 새로고침
+  if(active==='overview')renderOV();
+  else if(active==='workers')renderWL();
+  else if(active==='attendance')renderAL(afv);
+  // 콘텐츠 복사
+  document.getElementById('dual-manage-content').innerHTML=document.getElementById('admin-tab-'+active).innerHTML;
+}
+function updDualStat(w){
+  const recs=wkRecs(w.id),days=recs.filter(r=>r.ci).length;
+  let tm=0; recs.forEach(r=>{if(r.ci&&r.co)tm+=(new Date(r.co)-new Date(r.ci))/60000;});
+  document.getElementById('dual-days').textContent=days;
+  document.getElementById('dual-hours').textContent=Math.round(tm/60*10)/10;
+  const wt=w.wt||(D.wt[w.job]||'daily'),wage=w.wage||D.wages[w.job]||100000;
+  document.getElementById('dual-sal').textContent=wt==='unit'?'월산정':Math.round(days*wage/10000)+'만';
+}
+function renderDualRecs(w){
+  const el=document.getElementById('dual-records');
+  const cut=new Date(); cut.setDate(cut.getDate()-14);
+  const recs=D.att.filter(a=>a.wid===w.id&&new Date(a.date)>=cut).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!recs.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div>출퇴근 기록 없음</div>';return;}
+  el.innerHTML=recs.map(r=>{
+    const it=r.ci?fTime(r.ci):'-',ot=r.co?fTime(r.co):'미퇴근';
+    let hrs='';if(r.ci&&r.co){const m=(new Date(r.co)-new Date(r.ci))/60000;hrs=`${Math.round(m/60*10)/10}h`;}
+    return `<div class="record-item"><div class="record-dot ${r.co?'dot-in':'dot-out'}"></div>
+    <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${fDateS(r.date)}</div>
+    <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">${it} → ${ot}</div></div>
+    <div style="font-size:12px;font-weight:700;color:var(--accent2);font-family:var(--mono);">${hrs}</div></div>`;
+  }).join('');
+}
+function updDualBtns(w){
+  const today=tday(),r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  const bi=document.getElementById('dual-btn-in'),bo=document.getElementById('dual-btn-out');
+  if(r&&r.ci&&!r.co){bi.disabled=true;bo.disabled=false;}
+  else if(r&&r.ci&&r.co){bi.disabled=true;bo.disabled=true;}
+  else{bi.disabled=false;bo.disabled=true;}
+}
+function dualCheckIn(){
+  const w=D.workers.find(x=>x.id===CU.wid);if(!w)return;
+  const today=tday();let r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  if(r&&r.ci){toast('이미 출근 처리되었습니다','info');return;}
+  if(!r){r={id:Date.now()+'',wid:w.id,wname:w.name,site:w.site,job:w.job,date:today,ci:new Date().toISOString(),co:null,hasC:true,wage:w.wage||D.wages[w.job]||100000,wt:w.wt||(D.wt[w.job]||'daily')};D.att.push(r);}
+  else{r.ci=new Date().toISOString();}
+  save();updDualBtns(w);updDualStat(w);renderDualRecs(w);
+  toast(rMsg(MSGS_IN),'success');syncSh(r,'출근');
+}
+function dualCheckOut(){
+  const w=D.workers.find(x=>x.id===CU.wid);if(!w)return;
+  const today=tday(),r=D.att.find(a=>a.wid===w.id&&a.date===today);
+  if(!r||!r.ci){toast('출근 기록이 없습니다','error');return;}
+  if(r.co){toast('이미 퇴근 처리되었습니다','info');return;}
+  r.co=new Date().toISOString();save();updDualBtns(w);updDualStat(w);renderDualRecs(w);
+  const mins=Math.round((new Date(r.co)-new Date(r.ci))/60000);
+  toast(rMsg(MSGS_OUT),'success');syncSh(r,'퇴근');
+}
+
+// ════════════════════════════════════════
+// 대표 (CEO)
+// ════════════════════════════════════════
+function loadCeoScreen(){
+  renderCeoOV(); renderSalaryMonthSelect(); renderStatMonthSelect();
+  renderSalarySheet(); renderStats(); loadCeoSets(); renderCeoWageList(); renderCeoSiteList();
+  if(!D.admins)D.admins=[];
+  const el=document.getElementById('ceo-date'); if(el) el.textContent=fDateKR(new Date());
+}
+function ceoTab(t){
+  const ts=['overview','salary','stats','accounts','settings'];
+  document.querySelectorAll('#screen-ceo .admin-tab').forEach((el,i)=>el.classList.toggle('active',ts[i]===t));
+  ts.forEach(x=>document.getElementById('ceo-tab-'+x).style.display=x===t?'block':'none');
+  if(t==='settings') setTimeout(initOwnerSigCanvas2,100);
+  if(t==='accounts'){ renderAdminList(); initNaSite(); }
+}
+function renderCeoOV(){
+  const today=tday(),tr=D.att.filter(a=>a.date===today&&a.ci);
+  document.getElementById('ceo-today').textContent=tr.length;
+  document.getElementById('ceo-workers').textContent=D.workers.length;
+  const wkR=D.att.filter(a=>wkey(a.date)===wkey()&&a.ci);
+  document.getElementById('ceo-week-days').textContent=wkR.length;
+  // 이번 달 일당제 급여 합산
+  const now=new Date(),ym=`${now.getFullYear()}-${h2(now.getMonth()+1)}`;
+  const mRecs=D.att.filter(a=>a.date.startsWith(ym)&&a.ci&&a.wt==='daily');
+  const mSal=mRecs.reduce((s,a)=>s+(a.wage||0),0);
+  document.getElementById('ceo-month-sal').textContent=Math.round(mSal/10000);
+  // 현장별
+  document.getElementById('ceo-site-overview').innerHTML=D.sites.map(s=>`
+    <div class="record-item">
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;">${s}</div></div>
+      <div style="font-size:13px;color:var(--text2);">${tr.filter(a=>a.site===s).length}명 출근</div>
+    </div>`).join('');
+  // 직무별
+  document.getElementById('ceo-job-overview').innerHTML=D.jobs.map(j=>`
+    <div class="record-item">
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;">${j}</div></div>
+      <div style="font-size:13px;color:var(--text2);">${tr.filter(a=>a.job===j).length}명 출근</div>
+    </div>`).join('');
+}
+
+// 급여 정산
+function renderSalaryMonthSelect(){
+  const sel=document.getElementById('sal-month');
+  const months=[];
+  const now=new Date();
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${h2(d.getMonth()+1)}`;
+    const label=`${d.getFullYear()}년 ${d.getMonth()+1}월`;
+    months.push(`<option value="${val}">${label}</option>`);
+  }
+  sel.innerHTML=months.join('');
+}
+function renderStatMonthSelect(){
+  const sel=document.getElementById('stat-month');
+  const months=[];
+  const now=new Date();
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${h2(d.getMonth()+1)}`;
+    const label=`${d.getFullYear()}년 ${d.getMonth()+1}월`;
+    months.push(`<option value="${val}">${label}</option>`);
+  }
+  sel.innerHTML=months.join('');
+}
+function renderSalarySheet(){
+  const ym=document.getElementById('sal-month')?.value||`${new Date().getFullYear()}-${h2(new Date().getMonth()+1)}`;
+  const recs=D.att.filter(a=>a.date.startsWith(ym)&&a.ci);
+  const el=document.getElementById('salary-sheet');
+  if(!recs.length){el.innerHTML='<div class="empty-state"><div class="empty-state-icon">💰</div>해당 월 기록 없음</div>';return;}
+  // 직원별 집계
+  const map={};
+  recs.forEach(r=>{
+    if(!map[r.wid]) map[r.wid]={name:r.wname,site:r.site,job:r.job,days:0,wage:r.wage||0,wt:r.wt||'daily'};
+    map[r.wid].days++;
+  });
+  el.innerHTML=`<div style="padding:0 14px;">` +
+    Object.values(map).sort((a,b)=>a.site.localeCompare(b.site)).map(w=>{
+      const sal=w.wt==='unit'?'유닛 월산정':`${(w.days*w.wage).toLocaleString()}원`;
+      const salColor=w.wt==='unit'?'var(--accent2)':'var(--success)';
+      return `<div class="worker-card" style="margin:0 0 8px;">
+        <div style="padding:13px 14px;display:flex;align-items:center;gap:10px;">
+          <div class="worker-avatar">${w.name.charAt(0)}</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">${w.name}</div>
+            <div style="font-size:11px;color:var(--text3);">${w.job} · ${w.site}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:${salColor};">${sal}</div>
+            <div style="font-size:11px;color:var(--text3);">${w.days}일 · ${w.wt==='unit'?w.wage.toLocaleString()+'원/객실':w.wage.toLocaleString()+'원/일'}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+function exportSalaryCSV(){
+  const ym=document.getElementById('sal-month')?.value||`${new Date().getFullYear()}-${h2(new Date().getMonth()+1)}`;
+  const recs=D.att.filter(a=>a.date.startsWith(ym)&&a.ci);
+  const map={};
+  recs.forEach(r=>{
+    if(!map[r.wid]) map[r.wid]={name:r.wname,site:r.site,job:r.job,days:0,wage:r.wage||0,wt:r.wt||'daily'};
+    map[r.wid].days++;
+  });
+  const h=['이름','현장','직무','출근일수','급여방식','단가','예상급여'];
+  const rows=Object.values(map).map(w=>[w.name,w.site,w.job,w.days,w.wt==='unit'?'유닛제':'일당제',w.wage,w.wt==='unit'?'월산정':w.days*w.wage]);
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const b=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`급여정산_${ym}.csv`;a.click();
+  toast('급여 정산표 다운로드 완료! 💰','success');
+}
+
+// 통계
+function renderStats(){
+  const ym=document.getElementById('stat-month')?.value||`${new Date().getFullYear()}-${h2(new Date().getMonth()+1)}`;
+  const recs=D.att.filter(a=>a.date.startsWith(ym)&&a.ci);
+  const workers=new Set(recs.map(r=>r.wid)).size;
+  let tm=0; recs.forEach(r=>{if(r.ci&&r.co)tm+=(new Date(r.co)-new Date(r.ci))/60000;});
+  const sal=recs.filter(r=>r.wt==='daily').reduce((s,a)=>s+(a.wage||0),0);
+  document.getElementById('stat-total-days').textContent=recs.length;
+  document.getElementById('stat-total-workers').textContent=workers;
+  document.getElementById('stat-total-hours').textContent=Math.round(tm/60);
+  document.getElementById('stat-total-sal').textContent=Math.round(sal/10000);
+  // 현장별
+  document.getElementById('stat-site-list').innerHTML=D.sites.map(s=>{
+    const sr=recs.filter(r=>r.site===s);
+    return `<div class="record-item"><div style="flex:1;font-weight:700;">${s}</div><div style="color:var(--text2);">${sr.length}일 출근 · ${new Set(sr.map(r=>r.wid)).size}명</div></div>`;
+  }).join('');
+  // 직무별
+  document.getElementById('stat-job-list').innerHTML=D.jobs.map(j=>{
+    const jr=recs.filter(r=>r.job===j);
+    const jsal=jr.filter(r=>r.wt==='daily').reduce((s,a)=>s+(a.wage||0),0);
+    return `<div class="record-item"><div style="flex:1;font-weight:700;">${j}</div><div style="text-align:right;"><div style="font-size:12px;color:var(--text2);">${jr.length}일 · ${new Set(jr.map(r=>r.wid)).size}명</div><div style="font-size:11px;color:var(--success);">${jsal?Math.round(jsal/10000)+'만원':'유닛 정산'}</div></div></div>`;
+  }).join('');
+}
+
+// 대표 계정관리
+// 관리자 등록/관리
+function addAdmin(){
+  const name=document.getElementById('na-name').value.trim();
+  const pw=document.getElementById('na-pw').value.trim();
+  const site=document.getElementById('na-site').value;
+  if(!name||!pw){toast('이름과 비밀번호를 입력하세요','error');return;}
+  if(!/^\d{4}$/.test(pw)){toast('비밀번호는 4자리 숫자여야 합니다','error');return;}
+  if(D.admins.find(a=>a.name===name)){toast('이미 등록된 관리자입니다','error');return;}
+  if(!D.admins)D.admins=[];
+  const newA={id:Date.now()+'',name,pw,site,createdAt:new Date().toISOString()};
+  D.admins.push(newA);
+  save(); syncAdmin(newA);
+  document.getElementById('na-name').value='';
+  document.getElementById('na-pw').value='';
+  renderAdminList();
+  toast(`${name} 관리자님 등록됐어요! 🎉`,'success');
+}
+function renderAdminList(){
+  const el=document.getElementById('admin-list-card');
+  if(!el)return;
+  if(!D.admins||!D.admins.length){el.innerHTML='<div class="empty-state" style="padding:20px;">등록된 관리자 없음</div>';return;}
+  el.innerHTML=D.admins.map(a=>`
+    <div class="settings-row">
+      <div style="flex:1;">
+        <div class="settings-row-label">${a.name}</div>
+        <div class="settings-row-sub">${a.site} · 📱****${a.pw}</div>
+      </div>
+      <button class="btn-danger" onclick="delAdmin('${a.id}')">삭제</button>
+    </div>`).join('');
+}
+function delAdmin(id){
+  if(!confirm('관리자를 삭제하시겠습니까?'))return;
+  D.admins=D.admins.filter(a=>a.id!==id);
+  save();syncDeleteAdmin(id);renderAdminList();toast('관리자가 삭제됐어요 🗑️','info');
+}
+function initNaSite(){
+  const sel=document.getElementById('na-site');
+  if(sel)sel.innerHTML=D.sites.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+function ceoChgAdminPw(){const pw=document.getElementById('ceo-new-apw').value.trim();if(!pw||pw.length<4){toast('4자리 이상 입력하세요','error');return;}D.adminPw=pw;save();document.getElementById('ceo-new-apw').value='';toast('비밀번호 변경 완료! 🔒','success');}
+function ceoChgCeoPw(){const pw=document.getElementById('ceo-new-cpw').value.trim();if(!pw||pw.length<4){toast('4자리 이상 입력하세요','error');return;}D.ceoPassword=pw;save();document.getElementById('ceo-new-cpw').value='';toast('대표 비밀번호 변경 완료! 🔒','success');}
+// 공동대표 기능 제거됨
+
+// 대표 설정 (관리자 설정과 공유)
+function loadCeoSets(){ /* 고정값 사용 - 입력 불필요 */ }
+function saveCeoSets(){ /* 고정값 사용 */ }
+function renderCeoWageList(){document.getElementById('ceo-wage-list').innerHTML=D.jobs.map(j=>`<div class="settings-row"><div style="flex:1;"><div class="settings-row-label">${j}</div><div class="settings-row-sub">${(D.wt[j]||'daily')==='unit'?'유닛제':'일당제'}</div></div><input class="settings-input" type="number" value="${D.wages[j]||0}" style="width:110px;" onchange="D.wages['${j}']=parseInt(this.value)||0;save();"></div>`).join('');}
+function renderCeoSiteList(){document.getElementById('ceo-site-list').innerHTML=D.sites.map((s,i)=>`<div class="settings-row"><div style="flex:1;"><div class="settings-row-label">${s}</div></div><button class="btn-danger" onclick="delSite(${i});renderCeoSiteList();">삭제</button></div>`).join('');}
+
+// 대표 설정 탭 사업주 서명 (관리자 것과 공유)
+let ownerSigCV2=null,ownerSigCX2=null,ownerSigDrawing2=false;
+function initOwnerSigCanvas2(){
+  ownerSigCV2=document.getElementById('ceo-owner-sig-cv');
+  if(!ownerSigCV2)return;
+  ownerSigCX2=ownerSigCV2.getContext('2d');
+  const r=ownerSigCV2.getBoundingClientRect();
+  ownerSigCV2.width=r.width*window.devicePixelRatio; ownerSigCV2.height=r.height*window.devicePixelRatio;
+  ownerSigCX2.scale(window.devicePixelRatio,window.devicePixelRatio);
+  ownerSigCX2.strokeStyle='#111';ownerSigCX2.lineWidth=2.5;ownerSigCX2.lineCap='round';ownerSigCX2.lineJoin='round';
+  if(D.ownerSig){const img=new Image();img.onload=()=>ownerSigCX2.drawImage(img,0,0,r.width,r.height);img.src=D.ownerSig;document.getElementById('ceo-owner-sig-status').textContent='✅ 저장된 서명이 있습니다';document.getElementById('ceo-owner-sig-status').style.color='var(--success)';}
+  function gp(e){const rc=ownerSigCV2.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-rc.left,y:s.clientY-rc.top};}
+  ownerSigCV2.onmousedown=e=>{ownerSigDrawing2=true;const p=gp(e);ownerSigCX2.beginPath();ownerSigCX2.moveTo(p.x,p.y);};
+  ownerSigCV2.onmousemove=e=>{if(!ownerSigDrawing2)return;const p=gp(e);ownerSigCX2.lineTo(p.x,p.y);ownerSigCX2.stroke();};
+  ownerSigCV2.onmouseup=()=>ownerSigDrawing2=false;
+  ownerSigCV2.addEventListener('touchstart',e=>{e.preventDefault();ownerSigDrawing2=true;const p=gp(e);ownerSigCX2.beginPath();ownerSigCX2.moveTo(p.x,p.y);},{passive:false});
+  ownerSigCV2.addEventListener('touchmove',e=>{e.preventDefault();if(!ownerSigDrawing2)return;const p=gp(e);ownerSigCX2.lineTo(p.x,p.y);ownerSigCX2.stroke();},{passive:false});
+  ownerSigCV2.addEventListener('touchend',()=>ownerSigDrawing2=false);
+}
+function saveOwnerSig2(){if(!ownerSigCV2)return;D.ownerSig=ownerSigCV2.toDataURL('image/png');save();document.getElementById('ceo-owner-sig-status').textContent='✅ 서명이 저장되었습니다';document.getElementById('ceo-owner-sig-status').style.color='var(--success)';toast('서명이 저장됐어요! ✍️','success');}
+function clrOwnerSig2(){if(!ownerSigCV2||!ownerSigCX2)return;const r=ownerSigCV2.getBoundingClientRect();ownerSigCX2.clearRect(0,0,r.width*window.devicePixelRatio,r.height*window.devicePixelRatio);D.ownerSig='';save();}
+
+// tickClock에 dual/ceo clock 추가
+
+// ── 랜덤 메시지 ──
+const MSGS_IN  = ["오늘도 화이팅입니다! 💪","좋은 하루 되세요! 😊","출근 확인됐어요, 잘 부탁드려요! 🙌","안전하고 즐거운 하루 보내세요! ✨","오늘 하루도 수고 많으십니다! 😄"];
+const MSGS_OUT = ["오늘 하루도 정말 수고하셨어요! 🎉","퇴근 확인됐어요, 푹 쉬세요! 🌙","고생 많으셨어요, 내일 또 봬요! 😊","오늘도 멋지게 마무리하셨네요! 👏","수고하셨습니다, 맛있는 저녁 드세요! 🍽️"];
+const MSGS_SYNC= ["기록 완료! 📋","잘 저장됐어요! ✅","기록됐습니다! 👍"];
+const MSGS_LOGIN=["환영합니다! 오늘도 좋은 하루 되세요 😊","반갑습니다! 오늘도 잘 부탁드려요 🙌","어서오세요! 멋진 하루 되세요 ✨"];
+function rMsg(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+// ════════════════════════════════════════
+// 출퇴근 기록 추가/수정/삭제 (관리자)
+// ════════════════════════════════════════
+let editAttId = null;
+
+function openAddAtt(){
+  const sel = document.getElementById('aa-worker');
+  sel.innerHTML = D.workers.map(w=>`<option value="${w.id}">${w.name} (${w.job} · ${w.site})</option>`).join('');
+  document.getElementById('aa-date').value = tday();
+  document.getElementById('aa-ci').value = '09:00';
+  document.getElementById('aa-co').value = '';
+  document.getElementById('modal-add-att').classList.add('open');
+}
+
+function addAttRecord(){
+  const wid = document.getElementById('aa-worker').value;
+  const date = document.getElementById('aa-date').value;
+  const ciTime = document.getElementById('aa-ci').value;
+  const coTime = document.getElementById('aa-co').value;
+  if(!wid||!date||!ciTime){toast('직원, 날짜, 출근시간은 필수입니다','error');return;}
+  const w = D.workers.find(x=>x.id===wid);
+  if(!w) return;
+
+  // 같은 날 기록이 있으면 업데이트
+  let rec = D.att.find(a=>a.wid===wid&&a.date===date);
+  const ciISO = new Date(`${date}T${ciTime}:00`).toISOString();
+  const coISO = coTime ? new Date(`${date}T${coTime}:00`).toISOString() : null;
+
+  if(rec){
+    rec.ci = ciISO;
+    rec.co = coISO;
+  } else {
+    rec = {
+      id: Date.now()+'', wid, wname:w.name, site:w.site, job:w.job,
+      date, ci:ciISO, co:coISO, hasC:true,
+      wage:w.wage||D.wages[w.job]||100000, wt:w.wt||(D.wt[w.job]||'daily')
+    };
+    D.att.push(rec);
+  }
+  save();
+  closeM('modal-add-att');
+  renderAL(afv);
+  toast('기록이 추가됐어요! 📋','success');
+}
+
+function openEditAtt(id){
+  const r = D.att.find(a=>a.id===id);
+  if(!r){toast('기록을 찾을 수 없습니다','error');return;}
+  editAttId = id;
+  document.getElementById('edit-att-name').textContent = `${r.wname} · ${r.job}`;
+  document.getElementById('edit-att-date').textContent = `${r.site} · ${fDateS(r.date)}`;
+  document.getElementById('ea-ci').value = r.ci ? fTime(r.ci) : '';
+  document.getElementById('ea-co').value = r.co ? fTime(r.co) : '';
+  document.getElementById('modal-edit-att').classList.add('open');
+}
+
+function saveAttRecord(){
+  if(!editAttId){closeM('modal-edit-att');return;}
+  const r = D.att.find(a=>a.id===editAttId);
+  if(!r){toast('기록을 찾을 수 없습니다','error');return;}
+  const ciTime = document.getElementById('ea-ci').value;
+  const coTime = document.getElementById('ea-co').value;
+  if(!ciTime){toast('출근 시간은 필수입니다','error');return;}
+  r.ci = new Date(`${r.date}T${ciTime}:00`).toISOString();
+  r.co = coTime ? new Date(`${r.date}T${coTime}:00`).toISOString() : null;
+  save();
+  closeM('modal-edit-att');
+  renderAL(afv);
+  if(CU.type==='admin') loadAdminMyAtt();
+  toast('기록이 수정됐어요! ✅','success');
+}
+
+function deleteAttRecord(){
+  if(!editAttId) return;
+  if(!confirm('이 출퇴근 기록을 삭제하시겠습니까?')) return;
+  D.att = D.att.filter(a=>a.id!==editAttId);
+  save();
+  closeM('modal-edit-att');
+  renderAL(afv);
+  if(CU.type==='admin') loadAdminMyAtt();
+  toast('기록이 삭제됐어요 🗑️','info');
+  editAttId = null;
+}
+// ── SHEETS ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1UaW2ODunOSUdb-b9E3256rfVeyLBqwd3xQjPqirRC3mSbsUhtXy7qjCcllD7QQt0/exec';
+const FIXED_API_KEY = 'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s';
+const FIXED_SHEET_ID = '139Om3SRpBiAALqIA2Ru2CPJ5WMyeSaryOeyjTjK0NkI';
+
+// GAS 전송 - text/plain으로 보내야 CORS preflight 없이 동작
+async function gasPost(payload){
+  try{
+    await fetch(GAS_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(payload)
+    });
+  }catch(e){}
+}
+
+// GAS에서 데이터 읽기 - iframe 프록시 방식
+async function gasGetData(){
+  // GAS GET 요청 - no-cors 우회를 위해 fetch with redirect
+  try{
+    const url = GAS_URL + '?action=getData';
+    const res = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    const text = await res.text();
+    // JSONP 응답이면 파싱
+    const match = text.match(/^[^(]+\((.+)\)\s*;?\s*$/s);
+    if(match) return JSON.parse(match[1]);
+    return JSON.parse(text);
+  }catch(e){
+    return null;
+  }
+}
+
+// 출퇴근 기록
+async function syncSh(r,type){
+  try{
+    const worker=D.workers.find(w=>w.id===r.wid)||{};
+    const birth=(worker.ci_info&&worker.ci_info.birth)?worker.ci_info.birth:'';
+    const phone=worker.p4?`010-****-${worker.p4}`:'';
+    const timeStr=type==='출근'?fTime(r.ci):fTime(r.co);
+    await gasPost({action:'attendance',time:`${r.date} ${timeStr}`,name:r.wname,type,job:r.job||'',site:r.site||'',birth,phone});
+    toast(rMsg(MSGS_SYNC),'success');
+  }catch(e){}
+}
+
+// 직원 저장
+async function syncWorker(worker){
+  await gasPost({action:'saveWorker',worker});
+}
+
+// 직원 삭제
+async function syncDeleteWorker(id){
+  await gasPost({action:'deleteWorker',id});
+}
+
+// 관리자 저장
+async function syncAdmin(admin){
+  await gasPost({action:'saveAdmin',admin});
+}
+
+// 관리자 삭제
+async function syncDeleteAdmin(id){
+  await gasPost({action:'deleteAdmin',id});
+}
+
+// 앱 시작 시 구글 시트에서 직원/관리자 목록 동기화
+async function syncFromSheet(){
+  try{
+    const data = await gasGetData();
+    if(!data||data.result!=='ok') return;
+    const {workers, admins} = data.data||{};
+    let changed = false;
+
+    if(workers&&Array.isArray(workers)&&workers.length>0){
+      // 시트 데이터로 로컬 완전 교체
+      D.workers = workers;
+      changed = true;
+    }
+    if(admins&&Array.isArray(admins)&&admins.length>0){
+      if(!D.admins) D.admins=[];
+      D.admins = admins;
+      changed = true;
+    }
+    if(changed){
+      D.ceoPassword='1201';
+      save();
+    }
+  }catch(e){}
+}
+async function testSheetsFixed(){
+  const el=document.getElementById('ceo-gs-result');
+  if(el){el.textContent='테스트 중...';el.style.color='';}
+  try{
+    const data = await gasGetData();
+    if(data&&data.result==='ok'){
+      const wCnt = (data.data&&data.data.workers)?data.data.workers.length:0;
+      const aCnt = (data.data&&data.data.admins)?data.data.admins.length:0;
+      if(el){el.textContent=`✅ 연동 성공 (직원 ${wCnt}명 / 관리자 ${aCnt}명)`;el.style.color='var(--success)';}
+      toast(`구글 시트 연동 성공! 직원 ${wCnt}명 🎉`,'success');
+    }else{
+      if(el){el.textContent='❌ 데이터 없음';el.style.color='var(--danger)';}
+      toast('연동 실패: 데이터를 받지 못했습니다','error');
+    }
+  }catch(e){
+    if(el){el.textContent='❌ 오류: '+e.message;el.style.color='var(--danger)';}
+    toast('오류: '+e.message,'error');
+  }
+}
+async function testSheets(){
+  const k=document.getElementById('gs-key').value.trim(),s=document.getElementById('gs-id').value.trim();
+  if(!k||!s){toast('API Key와 Sheet ID를 입력하세요','error');return;}
+  document.getElementById('gs-result').textContent='테스트 중...';
+  try{const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${s}?key=${k}`);if(r.ok){document.getElementById('gs-result').textContent='✅ 연동 성공';document.getElementById('gs-result').style.color='var(--success)';toast('구글 시트 연동 성공! 🎉','success');}else{document.getElementById('gs-result').textContent='❌ 실패';document.getElementById('gs-result').style.color='var(--danger)';}}catch(e){document.getElementById('gs-result').textContent='❌ 네트워크 오류';document.getElementById('gs-result').style.color='var(--danger)';}
+}
+function exportCSV(){
+  const h=['날짜','이름','현장','직무','출근시간','퇴근시간','근무시간(h)','단가','급여방식'];
+  const rows=D.att.map(r=>{let hrs='';if(r.ci&&r.co){const m=(new Date(r.co)-new Date(r.ci))/60000;hrs=Math.round(m/60*10)/10;}return[r.date,r.wname,r.site,r.job||'',r.ci?fTime(r.ci):'',r.co?fTime(r.co):'',hrs,r.wage||'',r.wt||''];});
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`출퇴근기록_${tday()}.csv`;a.click();
+  toast('다운로드 완료! 잘 활용하세요 📊','success');
+}
+
+// ── HELPERS ──
+function tday(){const d=new Date();return `${d.getFullYear()}-${h2(d.getMonth()+1)}-${h2(d.getDate())}`;}
+function d2s(d){return `${d.getFullYear()}-${h2(d.getMonth()+1)}-${h2(d.getDate())}`;}
+function fTime(iso){if(!iso)return'';const d=new Date(iso);return `${h2(d.getHours())}:${h2(d.getMinutes())}`;}
+function fDateKR(d){const ds=['일','월','화','수','목','금','토'];return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${ds[d.getDay()]})`;}
+function fDateS(s){const d=new Date(s);const ds=['일','월','화','수','목','금','토'];return `${d.getMonth()+1}/${d.getDate()} (${ds[d.getDay()]})`;}
+function wkey(ds){const d=ds?new Date(ds):new Date();const day=d.getDay();const m=new Date(d);m.setDate(d.getDate()-(day===0?6:day-1));return `${m.getFullYear()}-W${h2(m.getMonth()+1)}-${h2(m.getDate())}`;}
+function wkRecs(wid){const wk=wkey();return D.att.filter(a=>a.wid===wid&&wkey(a.date)===wk);}
+
+function printCT(){
+  const el=document.getElementById('ctv-content');
+  if(!el) return;
+  const w=window.open('','_blank','width=800,height=900');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>근로계약서</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'Noto Sans KR',sans-serif;margin:20px;background:#fff;color:#111;}
+    table{width:100%;border-collapse:collapse;margin:7px 0;font-size:11px;}
+    table td{border:1px solid #ccc;padding:5px 7px;vertical-align:top;}
+    .th{background:#f0f4ff;font-weight:700;color:#1e3a8a;width:75px;text-align:center;}
+    @media print{button{display:none!important;}}
+  </style></head><body>
+  <button onclick="window.print()" style="margin-bottom:16px;padding:10px 24px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">🖨️ 인쇄하기</button>
+  ${el.innerHTML}
+  </body></html>`);
+  w.document.close();
+}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+let TT=null;
+function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;clearTimeout(TT);TT=setTimeout(()=>el.classList.remove('show'),2800);}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+init();
+</script>
+</body>
+</html>
