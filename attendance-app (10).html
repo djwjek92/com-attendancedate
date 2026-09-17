@@ -502,6 +502,7 @@ select option{background:var(--surface);}
       <div class="settings-section">
         <div class="settings-title">직무별 급여 단가</div>
         <div class="settings-card" id="ceo-wage-list"></div>
+        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="openAddJob()">+ 직무 추가</button>
       </div>
       <div class="settings-section">
         <div class="settings-title">현장 관리</div>
@@ -719,6 +720,35 @@ select option{background:var(--surface);}
   </div>
 </div>
 
+<!-- 직무 추가 모달 -->
+<div class="modal-overlay" id="modal-add-job">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ 직무 추가</div>
+    <div class="modal-body">
+      <div class="field-group">
+        <div class="field-label">직무명</div>
+        <input class="field-input" id="aj-name" type="text" placeholder="예: 러너, 세탁">
+      </div>
+      <div class="field-group">
+        <div class="field-label">급여 방식</div>
+        <select class="field-select" id="aj-wt">
+          <option value="daily">일당제 (원/일)</option>
+          <option value="unit">유닛제 (원/객실)</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">단가 (원)</div>
+        <input class="field-input" id="aj-wage" type="number" placeholder="예: 120000" inputmode="numeric">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1;" onclick="closeM('modal-add-job')">취소</button>
+      <button class="btn-primary" style="flex:2;" onclick="addJob()">추가하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD WORKER MODAL -->
 <div class="modal-overlay" id="modal-addw">
   <div class="modal-sheet">
@@ -744,16 +774,16 @@ select option{background:var(--surface);}
 <script>
 // ── DATA ──
 let D = {
-  sites:['Forest','sun','ocean'],
-  jobs:['메이드','인스펙터','하우스맨','베딩','더티'],
-  wt:{'메이드':'unit','인스펙터':'daily','하우스맨':'daily','베딩':'unit','더티':'unit'},
+  sites:['Forest','sun','ocean','기물팀'],
+  jobs:['메이드','인스펙터','하우스맨','베딩','더티','기물'],
+  wt:{'메이드':'unit','인스펙터':'daily','하우스맨':'daily','베딩':'unit','더티':'unit','기물':'daily'},
   wages:{'메이드':12000,'인스펙터':120000,'하우스맨':120000,'베딩':12000,'더티':12000},
   adminPw:'1201',
   ceoPassword:'1201',
   admins:[],
   workers:[],
   att:[],
-  sets:{key:'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s',sid:'139Om3SRpBiAALqIA2Ru2CPJ5WMyeSaryOeyjTjK0NkI'}, // 고정값
+  sets:{key:'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s',sid:'1v8_LA-QbOqEs-F3mndtnz0MiVR1Gwt01Mdco1rHtDGU'}, // 고정값
   ownerSig:'',
 };
 const STORE='com_att_v2';
@@ -768,7 +798,7 @@ function load(){
     }
   }catch(e){}
   if(!D.wt) D.wt={'메이드':'unit','인스펙터':'daily','하우스맨':'daily','베딩':'unit','더티':'unit'};
-  if(!D.sets) D.sets={key:'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s',sid:'139Om3SRpBiAALqIA2Ru2CPJ5WMyeSaryOeyjTjK0NkI'};
+  if(!D.sets) D.sets={key:'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s',sid:'1v8_LA-QbOqEs-F3mndtnz0MiVR1Gwt01Mdco1rHtDGU'};
   if(!D.admins) D.admins=[];
   // ceoPassword 항상 '1201'로 고정 (이전 저장값 무시)
   D.ceoPassword='1201';
@@ -1783,7 +1813,59 @@ function ceoChgCeoPw(){const pw=document.getElementById('ceo-new-cpw').value.tri
 // 대표 설정 (관리자 설정과 공유)
 function loadCeoSets(){ /* 고정값 사용 - 입력 불필요 */ }
 function saveCeoSets(){ /* 고정값 사용 */ }
-function renderCeoWageList(){document.getElementById('ceo-wage-list').innerHTML=D.jobs.map(j=>`<div class="settings-row"><div style="flex:1;"><div class="settings-row-label">${j}</div><div class="settings-row-sub">${(D.wt[j]||'daily')==='unit'?'유닛제':'일당제'}</div></div><input class="settings-input" type="number" value="${D.wages[j]||0}" style="width:110px;" onchange="D.wages['${j}']=parseInt(this.value)||0;save();"></div>`).join('');}
+function openAddJob(){
+  document.getElementById('aj-name').value='';
+  document.getElementById('aj-wt').value='daily';
+  document.getElementById('aj-wage').value='';
+  document.getElementById('modal-add-job').classList.add('open');
+}
+
+function addJob(){
+  const name = document.getElementById('aj-name').value.trim();
+  const wt   = document.getElementById('aj-wt').value;
+  const wage = parseInt(document.getElementById('aj-wage').value)||0;
+  if(!name){ toast('직무명을 입력하세요','error'); return; }
+  if(D.jobs.includes(name)){ toast('이미 있는 직무입니다','error'); return; }
+  D.jobs.push(name);
+  D.wt[name]    = wt;
+  D.wages[name] = wage;
+  save();
+  closeM('modal-add-job');
+  renderCeoWageList();
+  renderWageList();
+  toast(`${name} 직무가 추가됐어요! ✅`,'success');
+}
+
+function delJob(btnEl){
+  var job = btnEl.dataset.job;
+  if(!job) return;
+  if(!confirm(job+' 직무를 삭제하시겠습니까?')) return;
+  D.jobs = D.jobs.filter(function(j){return j!==job;});
+  delete D.wt[job];
+  delete D.wages[job];
+  save();
+  renderCeoWageList();
+  renderWageList();
+  toast(job+' 직무가 삭제됐어요 🗑️','info');
+}
+
+function renderCeoWageList(){
+  var fixedJobs=['메이드','인스펙터','하우스맨','베딩','더티','기물'];
+  var rows=D.jobs.map(function(j){
+    var wtLabel=(D.wt[j]||'daily')==='unit'?'유닛제 (원/객실)':'일당제 (원/일)';
+    var wage=D.wages[j]||0;
+    var delBtnHtml=fixedJobs.indexOf(j)===-1
+      ?'<button class="btn-danger" style="padding:4px 8px;font-size:11px;" onclick="delJob(this)" data-job="'+j+'">삭제</button>'
+      :'';
+    return '<div class="settings-row">'
+      +'<div style="flex:1;"><div class="settings-row-label">'+j+'</div>'
+      +'<div class="settings-row-sub">'+wtLabel+'</div></div>'
+      +'<input class="settings-input" type="number" value="'+wage+'" style="width:90px;margin-right:6px;" '
+      +'data-job="'+j+'" onchange="D.wages[this.dataset.job]=parseInt(this.value)||0;save();">'
+      +delBtnHtml+'</div>';
+  });
+  document.getElementById('ceo-wage-list').innerHTML=rows.join('');
+}
 function renderCeoSiteList(){document.getElementById('ceo-site-list').innerHTML=D.sites.map((s,i)=>`<div class="settings-row"><div style="flex:1;"><div class="settings-row-label">${s}</div></div><button class="btn-danger" onclick="delSite(${i});renderCeoSiteList();">삭제</button></div>`).join('');}
 
 // 대표 설정 탭 사업주 서명 (관리자 것과 공유)
@@ -1905,53 +1987,48 @@ function deleteAttRecord(){
   editAttId = null;
 }
 // ── SHEETS ──
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxKnmRqsJx7TdgPCDWheyZMLca1Qg2z1FiYSNE6PcC1JePmMOYSn1J2cMwR3QhOGp89/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz0IedeAEF6zizANJPzjA2tIkP6Kduoc23MhzacAPwnuGG5lMfXiWh-SCgwEDMmTkVX/exec';
 const FIXED_API_KEY = 'AIzaSyBA9E80pLlZ_DVtHjmO6oXjmHtC8zTVX0s';
-const FIXED_SHEET_ID = '139Om3SRpBiAALqIA2Ru2CPJ5WMyeSaryOeyjTjK0NkI';
+const FIXED_SHEET_ID = '1v8_LA-QbOqEs-F3mndtnz0MiVR1Gwt01Mdco1rHtDGU';
 
-// GAS 전송 - form 방식 (가장 확실)
-async function gasPost(payload){
+// ── GAS 통신 핵심 함수 (GET 방식으로 완전 통일) ──
+async function gasCall(payload){
   try{
-    const form = new FormData();
-    form.append('data', JSON.stringify(payload));
-    await fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: form
-    });
-  }catch(e){}
-}
-
-// GAS 전송 후 응답 받기 (계약서 저장 등 응답 필요한 경우)
-async function gasPostWithResponse(payload){
-  try{
-    const form = new FormData();
-    form.append('data', JSON.stringify(payload));
-    const res = await fetch(GAS_URL, {
-      method: 'POST',
-      body: form
-    });
-    return await res.json();
-  }catch(e){ return null; }
-}
-
-// GAS에서 데이터 읽기 - iframe 프록시 방식
-async function gasGetData(){
-  // GAS GET 요청 - no-cors 우회를 위해 fetch with redirect
-  try{
-    const url = GAS_URL + '?action=getData';
-    const res = await fetch(url, {
+    const qs = encodeURIComponent(JSON.stringify(payload));
+    const res = await fetch(`${GAS_URL}?data=${qs}`, {
       method: 'GET',
       redirect: 'follow'
     });
     const text = await res.text();
-    // JSONP 응답이면 파싱
-    const match = text.match(/^[^(]+\((.+)\)\s*;?\s*$/s);
-    if(match) return JSON.parse(match[1]);
+    // JSONP 형태 파싱
+    const m = text.match(/^[^(]+\((.+)\)\s*;?\s*$/s);
+    if(m) return JSON.parse(m[1]);
     return JSON.parse(text);
-  }catch(e){
-    return null;
-  }
+  }catch(e){ return null; }
+}
+
+// 저장/삭제 (응답 불필요)
+async function gasPost(payload){
+  gasCall(payload);
+}
+
+// 저장 후 응답 필요한 경우 (계약서 등)
+async function gasPostWithResponse(payload){
+  return await gasCall(payload);
+}
+
+// 직원/관리자/출퇴근 전체 조회
+async function gasGetData(){
+  try{
+    const res = await fetch(`${GAS_URL}?action=getData`, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    const text = await res.text();
+    const m = text.match(/^[^(]+\((.+)\)\s*;?\s*$/s);
+    if(m) return JSON.parse(m[1]);
+    return JSON.parse(text);
+  }catch(e){ return null; }
 }
 
 // 출퇴근 기록을 시트에 저장 (출근DB + 실시간 기록)
